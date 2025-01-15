@@ -14,11 +14,15 @@ public with sharing class JobParser {
         if(jsonMap.containsKey('jobs')){
             List<Object> jobs = (List<Object>) jsonMap.get('jobs');
             // Initialize containers for Account names and Job Application records
-            Set<String> accNames = new Set<String>();
-            List<Job_Application__c> jobApplicationList = new List<Job_Application__c>();
+            Set<String> companyNames = new Set<String>();
+            List<Job_Application__c> jobApplications = new List<Job_Application__c>();
             
             for(Object jobObject : jobs){
                 Map<String,Object> job = (Map<String,Object>) jobObject;
+                // Reject Jobs with null or blank company names
+                if(String.isBlank((String)job.get('company'))){
+                    continue;
+                }
                 // Create new Job_Application__c record from job
                 Job_Application__c jobApp = new Job_Application__c();
                 jobApp.Status__c = 'Saved';
@@ -26,12 +30,15 @@ public with sharing class JobParser {
                 jobApp.Position_Title__c = (String)job.get('title');
                 jobApp.Job_Posting_URL__c = (String)job.get('link');
                 jobApp.Job_Description__c = (String)job.get('snippet');
-                if(job.containsKey('salary') && !String.isEmpty((String)job.get('salary'))){
-                    jobApp.Salary__c = Integer.valueOf((String)job.get('salary'));
+                // Set salary only if present and valid
+                if(job.containsKey('salary') && !String.isBlank((String)job.get('salary'))){
+                    jobApp.Salary__c = (Decimal)Integer.valueOf((String)job.get('salary'));
                 }
-                accNames.add((String)job.get('company'));
+                companyNames.add((String)job.get('company'));
+                jobApplications.add(jobApp);
                 
             }
+            JobApplicationService.processJobApplications(companyNames, jobApplications);
         }
     }
 }
