@@ -1,12 +1,12 @@
 public with sharing class JoobleCallout implements Queueable, Database.AllowsCallouts {
     // API endpoint, key, parameters
-    private static final String JOOBLE_API_URL = 'https://jooble.org/api';
+    private static final String JOOBLE_API_URL = 'https://jooble.org/api/';
     private static final String JOOBLE_API_KEY = '09651830-e80f-4179-90f3-fe6f8dc909a3';
     
     // Class variables
     private String keywords; //keywords for job title search
     private String location; // location for job search
-    private Integer days;    // how many days old a job posting can be to be searched
+    private Integer days;    // how many days ago for a job created date
 
     // Class constructor
     public JoobleCallout (String keywords, String location, Integer days){
@@ -32,7 +32,8 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
 
         // Check Response
         if(response.getStatusCode() >= 200 && response.getStatusCode() <= 299){
-            
+            String jsonResponseBody = response.getBody();
+            JobParser.parseJoobleApps(jsonResponseBody);
         }
     }
 
@@ -40,13 +41,18 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
 
         // Calculate and format the date X days ago
         String formattedDate = Date.today().addDays(-days).format();
+        System.debug(formattedDate);
+        System.debug(keywords);
+        System.debug(location);
         // Build payload map
         Map<String,Object> jsonMap = new Map<String,Object>{
-            'keywords' => keywords,
-            'location' => location,
-            'datecreatedfrom' => formattedDate
+            'keywords' => 'Salesforce developer administrator',
+            'location' => 'Remote'
+        
         };
         // Serialize and return the payload
+        system.debug(jsonMap);
+        system.debug(JSON.serialize(jsonMap));
         return JSON.serialize(jsonMap);        
     }
 }
