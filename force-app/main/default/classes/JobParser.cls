@@ -5,11 +5,11 @@ public with sharing class JobParser {
      * @param jsonResponse The JSON response from the API.
      * @return A list of Job_Application__c records.
      */
-    public static void parseJoobleApps(String jsonResponse){
+    public static void parseJoobleApps(String jsonResponseBody){
 
         
         
-        Map<String,Object> jsonMap = (Map<String,Object>) JSON.deserializeUntyped(jsonResponse);
+        Map<String,Object> jsonMap = (Map<String,Object>) JSON.deserializeUntyped(jsonResponseBody);
         // If callout pulled back any jobs, iterate through to build Job Applications
         if(jsonMap.containsKey('jobs')){
             List<Object> jobs = (List<Object>) jsonMap.get('jobs');
