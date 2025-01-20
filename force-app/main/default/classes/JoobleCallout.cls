@@ -46,9 +46,9 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
         System.debug(location);
         // Build payload map
         Map<String,Object> jsonMap = new Map<String,Object>{
-            'keywords' => 'Salesforce developer administrator',
-            'location' => 'Remote'
-        
+            'keywords' => keywords,
+            'location' => location,
+            'datecreatedfrom' => formattedDate        
         };
         // Serialize and return the payload
         system.debug(jsonMap);
