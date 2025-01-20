@@ -32,7 +32,8 @@ public with sharing class JobParser {
                 jobApp.Job_Description__c = (String)job.get('snippet');
                 // Set salary only if present and valid
                 if(job.containsKey('salary') && !String.isBlank((String)job.get('salary'))){
-                    jobApp.Salary__c = (Decimal)Integer.valueOf((String)job.get('salary'));
+                   // jobApp.Salary__c = (Decimal)Integer.valueOf((String)job.get('salary'));                    
+                    jobApp.Salary_Text__c = (String)job.get('salary');                    
                 }
                 companyNames.add((String)job.get('company'));
                 jobApplications.add(jobApp);
