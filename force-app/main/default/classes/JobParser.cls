@@ -29,7 +29,16 @@ public with sharing class JobParser {
                 jobApp.Company_Name__c = (String)job.get('company');
                 jobApp.Position_Title__c = (String)job.get('title');
                 jobApp.Job_Posting_URL__c = (String)job.get('link');
-                jobApp.Job_Description__c = (String)job.get('snippet');
+                // Clean Job Description Snippet of HTML tags and entities and set jobApp job description field
+                String rawSnippet = (String)job.get('snippet');
+                jobApp.Job_Description__c = rawSnippet
+                    .replaceAll('<.*?>',' ')
+                    .replaceAll('&amp;', ' ')
+                    .replaceAll('&nbsp;', ' ')
+                    .replaceAll('&lt;',' ')
+                    .replaceAll('&gt;',' ')
+                    .normalizeSpace();
+
                 // Set salary only if present and valid
                 if(job.containsKey('salary') && !String.isBlank((String)job.get('salary'))){
                    // jobApp.Salary__c = (Decimal)Integer.valueOf((String)job.get('salary'));                    
