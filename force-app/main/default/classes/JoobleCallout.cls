@@ -48,7 +48,8 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
         Map<String,Object> jsonMap = new Map<String,Object>{
             'keywords' => keywords,
             'location' => location,
-            'datecreatedfrom' => formattedDate        
+            'datecreatedfrom' => formattedDate,
+            'salary' => '65000'        
         };
         // Serialize and return the payload
         system.debug(jsonMap);
