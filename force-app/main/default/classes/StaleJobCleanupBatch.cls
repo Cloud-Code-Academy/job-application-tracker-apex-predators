@@ -28,6 +28,6 @@ public class StaleJobCleanupBatch implements Database.Batchable<sObject>, Databa
 
     public void finish(Database.BatchableContext bc){
         // Log closed Jobs
-        System.debug('Closed Job Applications: ' + closedJobs);
+        System.debug('Batch Job Completed. Closed ' + closedJobs.size() + ' Job Applications: ' + closedJobs);
     }
 }
