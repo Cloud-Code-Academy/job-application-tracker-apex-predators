@@ -5,9 +5,7 @@ public with sharing class JobParser {
      * @param jsonResponse The JSON response from the API.
      * @return A list of Job_Application__c records.
      */
-    public static void parseJoobleApps(String jsonResponseBody){
-
-        
+    public static void parseJoobleApps(String jsonResponseBody){        
         
         Map<String,Object> jsonMap = (Map<String,Object>) JSON.deserializeUntyped(jsonResponseBody);
         // If callout pulled back any jobs, iterate through to build Job Applications
@@ -42,13 +40,72 @@ public with sharing class JobParser {
                 // Set salary only if present and valid
                 if(job.containsKey('salary') && !String.isBlank((String)job.get('salary'))){
                    // jobApp.Salary__c = (Decimal)Integer.valueOf((String)job.get('salary'));                    
-                    jobApp.Salary_Text__c = (String)job.get('salary');                    
+                    jobApp.Salary_Text__c = (String)job.get('salary');
+                    // Send Text Salary to parsing subMethod to pull back a number
+                    jobApp.Salary__c = parseSalary(jobApp.Salary_Text__c);                    
                 }
-                companyNames.add((String)job.get('company'));
+                // Add current iterating jobApp and companyName to respective containers
+                companyNames.add(jobApp.Company_Name__c);
                 jobApplications.add(jobApp);
                 
             }
+            // Send Set of companyNames and List of jobApplications to be processed in Service Class
             JobApplicationService.processJobApplications(companyNames, jobApplications);
         }
+    }
+
+    /**
+     * Parses the raw salary text and calculates the approximate highest salary as a Decimal.
+     * @param salaryText The raw salary text pulled back in the callout.
+     * @return The approximate highest salary as a Decimal, or null if parsing fails.
+     */
+    private static Decimal parseSalary(String salaryText){
+
+        // Check for error in transmitted Salry_Text__c field.
+        if(String.isBlank(salaryText)){
+            return null;
+        }
+        // Standardize input and initialize return variable
+        salaryText.trim().toLowerCase();
+        Decimal annualSalary = null;
+
+        // Process salary conversion in a Try-Catch block to account for non-standard information coming back from integration.
+        try {
+            if(salaryText.contains('-')){
+                List<String> salaryBounds = salaryText.split('-');
+                String upperBound = salaryBounds[1].trim();
+                annualSalary = parseSingleSalary(upperBound);
+            } else{
+                annualSalary = parseSingleSalary(salaryText);
+            }
+        } catch (Exception e){
+            System.debug('Error parsing salary: ' + salaryText + ' - ' + e.getMessage());
+        }
+        return annualSalary;
+    }
+
+    /**
+     * Parses a single salary (text) and converts it to an annual salary (Decimal).
+     * @param salaryText single salary to parse (e.g., "$80k" or $50/hr)
+     * @return annualSalary - a Decimal representation of the highest expected annual salary.
+     */
+
+    private static Decimal parseSingleSalary(String salaryText){
+
+        // Initialize return variable and standardize input
+        Decimal annualSalary = null;
+        salaryText = salaryText.replace('$', '').replace(',', '').trim();
+
+        // Handle known patterns
+        if(salaryText.endsWith('/hr')) {
+            Decimal hourlyRate = Decimal.valueOf(salaryText.replace('/hr', '').trim());
+            annualSalary = hourlyRate * 40 * 50; // Hourly Rate * 40 hours/week * 50 weeks/year
+        } else if(salaryText.endsWith('k')){
+            annualSalary = Decimal.valueOf(salaryText.replace('k', '').trim()) * 1000;
+        } else {
+            annualSalary = Decimal.valueOf(salaryText.trim());
+        }
+
+        return annualSalary;
     }
 }
