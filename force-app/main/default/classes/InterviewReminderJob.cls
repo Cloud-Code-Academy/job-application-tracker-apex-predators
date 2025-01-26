@@ -13,7 +13,7 @@ public with sharing class EventReminder {
         Datetime interviewDateTime
     ) {
 
-        String subject = 'Reminder: Upcoming Interview';
+        String subject = 'Reminder: Upcoming Event';
 
         // Build subject body
         String formattedDateTime = interviewDateTime.format('MM/dd/yyy hh:mm a');
