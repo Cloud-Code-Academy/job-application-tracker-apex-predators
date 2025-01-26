@@ -1,7 +1,7 @@
 /**
  * EmailService
  * 
- * This service class provides a utility methods to send emails in Salesforce. It is designed to handle 
+ * This service class provides a utility method to send emails in Salesforce. It is designed to handle 
  * various email-sending scenarios in a reusable and scalable way.
  */
 
@@ -20,7 +20,7 @@ public with sharing class EmailService {
      */ 
     public static void sendEmail(String subject, String body, List<String> emailAddresses){
     
-        // Send Email to System Admins. Output Error if unsuccessful 
+        // Send Email build from input parameters.  Output Error if unsuccessful 
         try{
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(emailAddresses);
