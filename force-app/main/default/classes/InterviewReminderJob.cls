@@ -3,25 +3,31 @@
  * Schedulable class to check for upcoming interviews, build email components for emailed reminders,
  *  then send those to the EmailService class to send the emails.
  */
-public with sharing class InterviewReminderJob implements Schedulable {
+public with sharing class InterviewReminderJob {
 
     /**
-     * Executes the scheduled job.
+     * Executes the logic for sending interview reminders.
      * Queries interviews scheduled tomorrow.
      * Builds email reminder components and sends the components to create and send an email.
      */
 
-    public void execute(SchedulableContext sc){
+    public static void runJob(){
+        // Query Interviews for tomorrow
         List<Event> interviews = queryInterviews();
+        // Process each returned interview if the Owner Email exists
         if(!interviews.isEmpty()){
             for(Event interview : interviews){
+                if (interview.Owner.Email == null){
+                    System.debug('No email found for owner of Event: ' + interview.Id);
+                    continue;
+                }
                 buildEmailComponents(interview);                
             }
         }
     }
 
     /**
-     * Queries interviews scheduled for tomorrow.
+     * Queries interviews scheduled to occur tomorrow.
      * @return A list of events representing tomorrow's interviews.
      */
     private static List<Event> queryInterviews(){
