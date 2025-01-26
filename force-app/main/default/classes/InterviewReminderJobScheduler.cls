@@ -1,6 +1,6 @@
 /**
  * InterviewScheduler
- * Schedules the InterviewReminderJob to run nightly at 2:00 AM.
+ * Schedules the InterviewReminderJob to run nightly at 3:00 AM.
  */
 public with sharing class InterviewReminderJobScheduler implements Schedulable{
     
