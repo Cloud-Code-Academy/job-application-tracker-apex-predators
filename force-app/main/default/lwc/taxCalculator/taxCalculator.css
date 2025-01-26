@@ -1,0 +1,22 @@
+.strong-text {
+    font-weight: bold;
+}
+
+
+:host {
+
+    background-color: var(--slds-g-color-background, #ff784f); /* Sets the surface background color */
+}
+
+
+.custom-section {
+    background-color: var(--slds-g-color-palette-teal-95); /* Uses SLDS border color */
+    box-shadow: shadow-4;
+}
+
+.custom-box {
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2); /* Custom shadow */
+    padding: 20px;
+    border-radius: 12px; /* Optional: smooth edges */
+    background: white; /* Ensure the shadow is visible */
+}
