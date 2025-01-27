@@ -41,33 +41,34 @@
                     class="strong-text slds-p-around_x-large"
                     value="" 
                 ></lightning-formatted-text></p>
-
+                
                 <lightning-input
                     class="strong-text"
                     style="width: 250px;"
-                    type="number"
-                    label="Federal Withholding" 
-                    name="federalWithholding" 
-                    value={fedTaxOwed}
-                    read-only=""
+                    type="text" 
+                    name="federalTaxOwed" 
+                    label="Federal Tax Owed"
+                    format-style=""
+                    value={formattedFedTaxOwed} 
+                    read-only
                 ></lightning-input>
                 <lightning-input
                     class="strong-text"
                     style="width: 250px;"
-                    type="number" 
+                    type="text" 
                     name="medicareWithholding" 
                     label="Medicare Withholding"
-                    value={salaryFromRecord}
-                    read-only=""
+                    value={formattedMedicareTaxOwed}
+                    readonly
                 ></lightning-input>
                 <lightning-input
                     class="strong-text"
                     style="width: 250px;"
-                    type="number" 
+                    type="text" 
                     name="socialSecurityWithholding" 
                     label="Social Security Withholding"
-                    value={salaryFromRecord}
-                    read-only=""
+                    value={formattedSocialSecurityTaxOwed}
+                    readonly
                 ></lightning-input>
               </span>
             </div>
@@ -81,48 +82,59 @@
                         class="strong-text slds-p-around_x-large"
                         value="" 
                     ></lightning-formatted-text></p>        
-                <lightning-input
-                    class="strong-text"
+                    <lightning-input
+                        class="strong-text"
                         style="width: 250px;"
-                        type="number" 
+                        type="text" 
                         name="weeklyPay" 
                         label="Weekly Take Home"
                         value={salaryFromRecord}
-                        read-only=""
-                ></lightning-input>
-                <lightning-input
-                    class="strong-text"
-                    style="width: 250px;"
-                    type="number" 
-                    name="biWeeklyPay" 
-                    label="Bi-Weekly Pay"
-                    value={salaryFromRecord}
-                    read-only=""
-                ></lightning-input>
-                <lightning-input
-                    class="strong-text"
-                    style="width: 250px;"
-                    type="number" 
-                    name="monthlyPay" 
-                    label="Monthly Pay"
-                    value={salaryFromRecord}
-                    read-only=""
-                ></lightning-input>
+                        readonly
+                    ></lightning-input>
+                    <lightning-input
+                        class="strong-text"
+                        style="width: 250px;"
+                        type="text" 
+                        name="biWeeklyPay" 
+                        label="Bi-Weekly Pay"
+                        value={salaryFromRecord}
+                        readonly
+                    ></lightning-input>
+                    <lightning-input
+                        class="strong-text"
+                        style="width: 250px;"
+                        type="text" 
+                        name="monthlyPay" 
+                        label="Monthly Pay"
+                        value={salaryFromRecord}
+                        readonly
+                    ></lightning-input>
+                    <lightning-input
+                        class="strong-text"
+                        style="width: 250px;"
+                        type="text" 
+                        name="yearlyPay"
+                        label="Yearly Pay After Taxes" 
+                        value={formattedYearlyPay}
+                        readonly
+                    ></lightning-input>
                 </span>
             </div>
         </div>
+        <div class="slds-small-size slds-p-around_medium slds-align_absolute-center custom-section custom-box">
+            <lightning-input
+                class="strong-text"
+                style="width: 250px;"
+                type="text" 
+                name="yearlyPay"
+                label="Yearly Pay After Taxes" 
+                value={formattedYearlyPay}
+                readonly
+             ></lightning-input>
+        </div>
+        
 
-
-
-        <!-- Calculate Button in Bottom Right Corner -->
-        <p slot="footer">
-                <lightning-button
-                    class="slds-m-left_x-small"
-                    variant="success"
-                    label="Calculate" 
-                    slot="actions"
-                ></lightning-button>
-        </p>
+        
 
         <!-- Possible links to additional resources -->
         <p class="slds-p-horizontal_small custom-section strong-text">Tax Info Resources</p>
@@ -135,6 +147,16 @@
                     <a href="https://www.irs.gov/">IRS Website</a>
                 </li>
             </ul>
+
+        <!-- Calculate Button in Bottom Right Corner -->
+        <p slot="footer">
+            <lightning-button
+                class="slds-m-left_x-small"
+                variant="success"
+                label="Calculate" 
+                slot="actions"
+            ></lightning-button>
+    </p>    
             
     </lightning-card>
 </template>
