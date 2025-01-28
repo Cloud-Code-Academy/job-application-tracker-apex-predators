@@ -12,6 +12,10 @@
 .custom-section {
     background-color: var(--slds-g-color-palette-teal-95); /* Uses SLDS border color */
     box-shadow: shadow-4;
+    border-radius: 10px;        /* Rounded corners for the entire calculator */
+    padding: 10px;
+    width: 100%; 
+    box-sizing: border-box; 
 }
 
 .custom-box {
@@ -19,4 +23,9 @@
     padding: 20px;
     border-radius: 12px; /* Optional: smooth edges */
     background: white; /* Ensure the shadow is visible */
+}
+
+.yearly-pay {
+    font-weight: bolder;
+    font-size: 30px;
 }

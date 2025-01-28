@@ -35,14 +35,21 @@ export default class TaxCalculator extends LightningElement {
     weeklyPay                           = 0;
     biWeeklyPay                         = 0;
     monthlyPay                          = 0;
+    sixMonthPay                         = 0;
     yearlyPay                           = 0;
     socialSecurityTaxOwed               = 0;
     medicareTaxOwed                     = 0;
     fedTaxOwed                          = 0;
+    totalTaxes                          = 0;
     formattedFedTaxOwed                 = 0;
     formattedMedicareTaxOwed            = 0;
     formattedSocialSecurityTaxOwed      = 0;
     formattedYearlyPay                  = 0;
+    formattedWeeklyPay                  = 0;    
+    formattedTotalTaxes                 = 0;
+    formattedBiWeeklyPay                = 0;
+    formattedSixMonthPay                = 0;
+    formattedMonthlyPay                 = 0;
 
 
 
@@ -121,28 +128,42 @@ export default class TaxCalculator extends LightningElement {
         }
 
 
-        // raw numbers not formatted for calculations
+        // raw (tax) numbers not formatted. better for calculations
         this.fedTaxOwed = fedTaxOwed;   
         this.socialSecurityTaxOwed = this.salaryFromRecord * socialSecurityWithholdingRate; //calculate social security tax owed
         this.medicareTaxOwed = this.salaryFromRecord * medicareWithholdingRate; //calculate medicare tax owed
+        this.totalTaxes = this.medicareTaxOwed + this.socialSecurityTaxOwed + this.fedTaxOwed //calculate Total Tax Owed
+
+
+        //  raw (pay) numbers not formatted. better for calculations
+    
+        this.yearlyPay = this.salaryFromRecord - this.totalTaxes;
+        this.sixMonthPay = this.yearlyPay / 2;
+        this.monthlyPay = this.yearlyPay / 12;
+        this.biWeeklyPay = this.yearlyPay / 26;
+        this.weeklyPay = this.yearlyPay / 52; 
+
+        // formatted (tax) numbers for super duper pretty LWC
 
         this.formattedSocialSecurityTaxOwed = this.socialSecurityTaxOwed.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
         this.formattedMedicareTaxOwed = this.medicareTaxOwed.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
         this.formattedFedTaxOwed = this.fedTaxOwed.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
         this.formattedYearlyPay = this.yearlyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        this.formattedTotalTaxes = this.totalTaxes.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+
+        // formatted (pay) numbers for super duper pretty LWC
+        this.formattedYearlyPay = this.yearlyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        this.formattedSixMonthPay = this.sixMonthPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        this.formattedMonthlyPay = this.monthlyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        this.formattedBiWeeklyPay = this.biWeeklyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        this.formattedWeeklyPay = this.weeklyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+
 
         console.log(`Fed Tax Owed: ${this.fedTaxOwed}, Social Security: ${this.socialSecurityTaxOwed}, Medicare: ${this.medicareTaxOwed}`);
 
 
 
-        // **Correct yearlyPay calculation**
-        let totalTaxes = this.fedTaxOwed + this.socialSecurityTaxOwed + this.medicareTaxOwed;
-        this.yearlyPay = this.salaryFromRecord - totalTaxes;
-
-        console.log(`Yearly Pay After Taxes: ${this.yearlyPay}`);
-
-        console.log(`Salary: ${this.salaryFromRecord}, Tax Owed: ${this.fedTaxOwed}`);
-
+        
         
 
 
