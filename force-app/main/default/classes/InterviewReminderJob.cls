@@ -8,21 +8,28 @@ public with sharing class InterviewReminderJob {
     /**
      * Executes the logic for sending interview reminders.
      * Queries interviews scheduled tomorrow.
-     * Builds email reminder components and sends the components to create and send an email.
+     * Builds email reminder components for each valid interview
+     * Packages components into an EmailData instance
+     * Colland sends the components to create and send an email.
      */
 
     public static void runJob(){
         // Query Interviews for tomorrow
         List<Event> interviews = queryInterviews();
-        // Process each returned interview if the Owner Email exists
         if(!interviews.isEmpty()){
+            // Build container to hold email data for multiple interview emails
+            List<EmailData> emailDataList = new List<EmailData>();
             for(Event interview : interviews){
+                // Reject interviews if the owner email doesn't exist
                 if (interview.Owner.Email == null){
                     System.debug('No email found for owner of Event: ' + interview.Id);
                     continue;
                 }
-                buildEmailComponents(interview);                
+                // Process interview details to return EmailData instance and add to collection
+                emailDataList.add(buildEmailComponents(interview));                
             }
+            // Send list of EmailData instances to the EmailService class to send the emails in bulk
+            EmailService.sendEmail(emailDataList);
         }
     }
 
@@ -30,7 +37,7 @@ public with sharing class InterviewReminderJob {
      * Queries interviews scheduled to occur tomorrow.
      * @return A list of events representing tomorrow's interviews.
      */
-    private static List<Event> queryInterviews(){
+    public static List<Event> queryInterviews(){
 
         // Create Datetime variables to bound search
         Datetime tomorrowStart = Datetime.newInstance(Date.today().addDays(1), Time.newInstance(0, 0, 0, 0));
@@ -49,12 +56,15 @@ public with sharing class InterviewReminderJob {
     
     /**
      * Creates email components from an Event record.
-     * Sends components to the EmailService class to send the email.
-     * @param interview The event representing the interview. 
+     * Packages email components into an EmailData instance
+     *
+     * @param interview The event representing the interview.
+     * @return ec an EmailData instance that packages the components together 
      */
-    public static void buildEmailComponents(Event interview){
+    public static EmailData buildEmailComponents(Event interview){
 
-        String subject = 'Reminder: Upcoming Event';
+        // Initiate return variable
+        String subject = 'Reminder: Upcoming Interview';
         
         // Build email body
         String positionTitle = 'N/A';
@@ -67,14 +77,20 @@ public with sharing class InterviewReminderJob {
         }
         String formattedDateTime = interview.StartDateTime.format('MM/dd/yyy hh:mm a');
         String body =   'You have an interview scheduled tomorrow. \n\n' +
-                        'Event Subject: ' + (interview.Subject != null ? interview.Subject : 'No Subject') + '\n' +
-                        'Start Time: ' + formattedDateTime + '\n' +
-                        'Contact Name: ' + (interview.Who != null ? interview.Who.Name : 'N/A') + '\n' +
-                        'Position Title: ' + positionTitle + '\n' +
-                        'Company: ' + companyName + '\n\n' +
-                        'Best of luck!!';
+        'Event Subject: ' + (interview.Subject != null ? interview.Subject : 'No Subject') + '\n' +
+        'Start Time: ' + formattedDateTime + '\n' +
+        'Contact Name: ' + (interview.Who != null ? interview.Who.Name : 'N/A') + '\n' +
+        'Position Title: ' + positionTitle + '\n' +
+        'Company: ' + companyName + '\n\n' +
+        'Best of luck!!';
         
-        // Send the Email
-        EmailService.sendEmail(subject, body, new List<String>{interview.Owner.Email});
+        // Create EmailData instance to send email components to EmailService
+        EmailData ec = new EmailData(
+            subject,
+            body,
+            new List<String>{interview.Owner.Email}
+        );
+
+        return ec;
     }
 }
