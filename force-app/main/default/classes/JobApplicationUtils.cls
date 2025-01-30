@@ -1,6 +1,32 @@
+/*
+* 
+* JobApplicationUtils class executes static methods called from the JobApplicationTriggerHandler.cls class:
+* 
+* - setPrimaryContacts: For all Job Applications, if the Primcary_Contact__c field is null, see if the Job Application has any 
+*         Application Contact records. If so, use the first one to set a new Primary Contact
+* 
+* - checkStatus: Check if the Status of the Job App has been updated
+* 
+* - createTasks: For each possible Status, generate and insert specific Tasks
+* 
+* - taskCreation: Create a task and populate all fields
+* 
+* - createAppContact: check for existing Application Contact records and make one for the the ob App's Primary Contact if none found
+*  
+*/
 public with sharing class JobApplicationUtils {
+    /*
+    * 
+    * setPrimaryContacts identifies all Job Application records that are missing Primary_Contact__c.
+    * It then finds Application Contact records for the Job Applications and saves the first one for
+    * each of the Apps. If at least one was found, use that Contact as the App's Primary Contact
+    * 
+    * @param apps: list of Job Application records
+    */
     public static void setPrimaryContacts(List<Job_Application__c> apps) {
+        // Create a list to hold the IDs of the Job Apps that are missing Primary Contact
         List<Id> appIds = new List<Id>();
+        // Create a map to hold the App Id for each App Contact that will be used
         Map<Id, Application_Contact__c> contactsForApps = new Map<Id, Application_Contact__c>();
 
         // Get the Id of every Job Application that needs a Primary Contact
@@ -10,42 +36,72 @@ public with sharing class JobApplicationUtils {
             }
         }
 
-        // Get all Application Contacts for Job Applications that need a Primary Contact
-        List<Application_Contact__c> contacts = [SELECT Id, Name FROM Application_Contact__c WHERE Job_Application__c IN :appIds];
-        for (Application_Contact__c con : contacts) {
-            // If no contact has been found yet for an application, record this one
-            if (!contactsForApps.keySet().contains(con.Job_Application__c)) {
-                contactsForApps.put(con.Job_Application__c, con);
+        if (!appIds.isEmpty()) {
+            // Get all Application Contacts for Job Applications that need a Primary Contact
+            List<Application_Contact__c> contacts = [SELECT Id, Name FROM Application_Contact__c WHERE Job_Application__c IN :appIds];
+            for (Application_Contact__c con : contacts) {
+                // If no contact has been found yet for an application, record this one
+                if (!contactsForApps.keySet().contains(con.Job_Application__c)) {
+                    contactsForApps.put(con.Job_Application__c, con);
+                }
             }
-        }
 
-        // Get the records that need a Primary Contact and retrieve contact from map
-        List<Job_Application__c> appToUpdate = [SELECT Id, Name, Primary_Contact__c FROM Job_Application__c WHERE Id IN :appIds];
-        for (Job_Application__c app : appToUpdate) {
-            app.Primary_Contact__c = contactsForApps.get(app.Id).Id;
+            if (!contactsForApps.isEmpty()) {
+                // Get the records that need a Primary Contact and retrieve contact from map and set it on the Job App
+                List<Job_Application__c> appToUpdate = [SELECT Id, Name, Primary_Contact__c FROM Job_Application__c WHERE Id IN :appIds];
+                for (Job_Application__c app : appToUpdate) {
+                    app.Primary_Contact__c = contactsForApps.get(app.Id).Id;
+                }
+            }
         }
     }
 
+    /*
+    * 
+    * checkStatus takes a list of updated records and a map of the old values and returns a list of the
+    * records in which the Status has been updated
+    * 
+    * @param newApps: a list of updated records. Example: Trigger.new
+    * @param oldApps: a map of the newApps records prior to update. Example: Trigger.oldMap
+    * 
+    * @return appsWithNewStatus: a list of records whose Status has changed from oldApps to newApps
+    * 
+    */
     public static List<Job_Application__c> checkStatus(List<Job_Application__c> newApps, Map<Id, Job_Application__c> oldApps) {
+        // Create a list to hold the Job Apps with changed Status
         List<Job_Application__c> appsWithNewStatus = new List<Job_Application__c>();
 
+        // For each of the newApps apps, if the status has changed, add the Job App to the new list
         for (Job_Application__c app : newApps){
             if (app.Status__c != oldApps.get(app.Id).Status__c) {
                 appsWithNewStatus.add(app);
             }
         }
+        // Return the list of Job Applications whose Status has changed
         return appsWithNewStatus;
     }
 
+    /*
+    * 
+    * createTasks creates and inserts tasks corresponding to the Status of each Job Application in the passed in list
+    * 
+    * @param apps: a list of Job Application records
+    * 
+    */
     public static void createTasks(List<Job_Application__c> apps) {
+        // Create a list to hold the new Tasks to be inserted
         List<Task> newTasks = new List<Task>();
+
+        // Loop through all Job Apps
         for (Job_Application__c app : apps) {
+            // Create 4 Tasks if the record has Status "Saved"
             if (app.Status__c == 'Saved'){
                 newTasks.add(taskCreation(app, 5, 'Confirm Salary', 'Normal','Check the job posting or company website to confirm the Salary and update it on the job Application.'));
                 newTasks.add(taskCreation(app, 5, 'Check Job Description For Fit', 'High','Check if the job description aligns with your interests and values.'));
                 newTasks.add(taskCreation(app, 5, 'Review Highlighted Skills for Fit', 'Normal','Review the highlighted skills to see if the role is a good fit.'));
                 newTasks.add(taskCreation(app, 5, 'Research Company/Role and Rate Job', 'Low','Research the company or role and mark your excitement level.'));
 
+            // Create 5 Tasks if the record has Status "Applying"
             } else if (app.Status__c == 'Applying'){
                 newTasks.add(taskCreation(app, 5, 'Find Employee and Add as a Related Contact', 'Normal','Find and research someone who works at the company and add them as a contact.'));
                 newTasks.add(taskCreation(app, 7, 'Set Up Informational Interview', 'Normal','Set up an informational interview to learn more about the role/company.'));
@@ -53,12 +109,14 @@ public with sharing class JobApplicationUtils {
                 newTasks.add(taskCreation(app, 3, 'Customize Work Achievements', 'Normal','Customize your work achievements using the job description keywords.'));
                 newTasks.add(taskCreation(app, 3, 'Submit Application', 'High','Submit your application, on the company website if possible.'));
 
+            // Create 4 Tasks if the record has Status "Applied"    
             } else if (app.Status__c == 'Applied'){
                 newTasks.add(taskCreation(app, 1, 'Make Contact', 'High','Reach out to the hiring manager or recruiter.'));
                 newTasks.add(taskCreation(app, 7, 'Follow Up on Application', 'Normal','Follow up on your application via email weekly.'));
-                newTasks.add(taskCreation(app, 1, 'Continue Applying', 'Low','Continue identifying and saving similar job opportunities.'));
-                newTasks.add(taskCreation(app, 1, 'Set Up Weekly Networking Calls', 'Low','Set up weekly networking calls to explore similar companies/roles.'));
+                newTasks.add(taskCreation(app, 4, 'Continue Applying', 'Low','Continue identifying and saving similar job opportunities.'));
+                newTasks.add(taskCreation(app, 7, 'Set Up Weekly Networking Calls', 'Low','Set up weekly networking calls to explore similar companies/roles.'));
 
+            // Create 5 Tasks if the record has Status "Interviewing"
             } else if (app.Status__c == 'Interviewing'){
                 newTasks.add(taskCreation(app, 1, 'Prepare Blurb', 'High','Prepare your blurb or “tell me about yourself” response.'));
                 newTasks.add(taskCreation(app, 1, 'Practice Answering Questions', 'High','Practice answering behavioral interview questions.'));
@@ -66,62 +124,122 @@ public with sharing class JobApplicationUtils {
                 newTasks.add(taskCreation(app, 1, 'Set Up Space and Test Tech', 'High','Set up your virtual interview space and test your tech.'));
                 newTasks.add(taskCreation(app, 1, 'Send Thank You Email', 'High','Send thank you emails within 24 hours.'));
 
+            // Create 3 Tasks if the record has Status "Negotiating"
             } else if (app.Status__c == 'Negotiating'){
-                newTasks.add(taskCreation(app, 1, 'Research Market Value', 'Normal','Research your market value and know your numbers.'));
-                newTasks.add(taskCreation(app, 1, 'Prepare Negotiation Script', 'Normal','Prepare your negotiation scripts.'));
-                newTasks.add(taskCreation(app, 1, 'Evaluate Offer', 'High','Evaluate your offer and decline or accept.'));
+                newTasks.add(taskCreation(app, 4, 'Research Market Value', 'Normal','Research your market value and know your numbers.'));
+                newTasks.add(taskCreation(app, 4, 'Prepare Negotiation Script', 'Normal','Prepare your negotiation scripts.'));
+                newTasks.add(taskCreation(app, 5, 'Evaluate Offer', 'High','Evaluate your offer and decline or accept.'));
 
+            // Create 3 Tasks if the record has Status "Accepted"
             } else if (app.Status__c == 'Accepted'){
-                newTasks.add(taskCreation(app, 1, 'Plan Resignation, if Applicable', 'Low','Plan your resignation if applicable.'));
-                newTasks.add(taskCreation(app, 1, 'Relax and Recharge', 'High','Take some time to relax and recharge.'));
-                newTasks.add(taskCreation(app, 1, 'Prepare for First Day', 'Normal','Prepare for your first day of onboarding.'));
+                newTasks.add(taskCreation(app, 7, 'Plan Resignation, if Applicable', 'Low','Plan your resignation if applicable.'));
+                newTasks.add(taskCreation(app, 7, 'Relax and Recharge', 'High','Take some time to relax and recharge.'));
+                newTasks.add(taskCreation(app, 7, 'Prepare for First Day', 'Normal','Prepare for your first day of onboarding.'));
 
+            // Create 2 Tasks if the record has Status "Closed"
             } else if (app.Status__c == 'Closed'){
                 newTasks.add(taskCreation(app, 1, 'Send Follow-Up Email', 'High','Send a follow-up email thanking the interviewer and asking for feedback.'));
-                newTasks.add(taskCreation(app, 1, 'Review and Reflect', 'Normal','Review your notes and reflect on areas of improvement.'));
+                newTasks.add(taskCreation(app, 5, 'Review and Reflect', 'Normal','Review your notes and reflect on areas of improvement.'));
             }
-            insert newTasks;
+            
+            // Insert the new Task records
+            if (!newTasks.isEmpty()) {
+                insert newTasks;
+            }
         }
     }
 
+    /*
+    * 
+    * taskCreation takes a Job Application and some field values and returns a Task related to that Job App
+    * and with those custom field values.
+    * 
+    * @param app: a Job Application to which the Task will be related
+    * @param days: the number of days from now until when the Task will be due
+    * @param taskSubject: the Subject for the Task
+    * @param taskPriority: the priority level of the Task
+    * @param taskDescription: the description of what is need to complete the Task
+    * 
+    * @return newTask: a new Task
+    * 
+    */
     public static Task taskCreation (Job_Application__c app, Integer days, String taskSubject, String taskPriority, String taskDescription) {
+        // Create a Task and populate its fields
         Task newTask = new Task();
         newTask.Subject = taskSubject;
         newTask.WhatId = app.Id;
         newTask.ActivityDate = Date.today().addDays(days);
-        newTask.WhoId = app.Primary_Contact__c;
         newTask.OwnerId = UserInfo.getUserId();
         newTask.Status = 'Not Started';
         newTask.Priority = taskPriority;
         newTask.description = Taskdescription;
+        
+        // If the Job App has a Primary Contact, use it for the WhoId on the Task
+        if (app.Primary_Contact__c != null) {
+            newTask.WhoId = app.Primary_Contact__c;
+        }
 
+        // Return the new Task
         return newTask;
     }
 
-    public static void createAppContact (List<Job_Application__c> newApps, Map<Id, Job_Application__c> oldApps) {
-        List<Application_Contact__c> accountContactsToCreate = new List<Application_Contact__c>();
+    /* 
+    * checkForPrimaryChange takes a list of Applications and a map of their former values and if the Primary_Contact__c 
+    * value has changed, it searches to see if the new Primary Contact already has an Application Contact record
+    * for that Job App. It returns all that do not.
+    * 
+    * @param newApps: the updated Job Application records. Example: Trigger.new
+    * @param oldApps: the previous values of the Job Apps. Example: Trigger.oldMap
+    * 
+    * @return newApps: the list of Job Applications that have had their Primary Contact changed
+    * 
+    */    
+    public static List<Job_Application__c> checkForPrimaryChange (List<Job_Application__c> newApps, Map<Id, Job_Application__c> oldApps) {
+        // Create a list and populate it with all App Contacts related to the passed in Apps
         List<Application_Contact__c> existingAppContacts = [SELECT Id, Contact__c, Job_Application__c FROM Application_Contact__c WHERE Job_Application__c IN :newApps];
 
+// add to map <contact id, list<app ids>> and then for each passed in app, see if the primary contact is in the map and if so, see if the list includes the app id
         for (Integer i=0; i<newApps.size(); i++) {
-            if (newApps[i].Primary_Contact__c != oldApps.get(newApps[i].Id).Primary_Contact__c) {
+            if ((newApps[i].Primary_Contact__c != oldApps.get(newApps[i].Id).Primary_Contact__c) && (newApps[i].Primary_Contact__c != null)) {
                 for (Application_Contact__c appCon : existingAppContacts) {
-                    if (appCon.Job_Application__c == newApps[i].Id && appCon.Contact__c == newApps[i].Primary_Contact__c) {
+                    if ((appCon.Job_Application__c == newApps[i].Id) && (appCon.Contact__c == newApps[i].Primary_Contact__c)) {
                         newApps.remove(i);
                     }
                 }
             }
         }
+        return newApps;
+    }
 
-        if (!newApps.isEmpty()) {
-            for (Job_Application__c jobApp : newApps) {
+    /* 
+    * createAppContact takes a list of Applications that are either new or have just had their Primary Contact 
+    * value changed, and it creates the new record.
+    * 
+    * @param apps: the updated Job Application records.
+    * 
+    */
+    public static void createAppContact (List<Job_Application__c> apps) {
+        // Create a list to hold the records that need to be created
+        List<Application_Contact__c> applicationContactsToCreate = new List<Application_Contact__c>();
+
+        // If the list of apps is not empty
+        for (Job_Application__c jobApp : apps) {
+            if (jobApp.Primary_Contact__c != null) {
                 Application_Contact__c newAppContact = new Application_Contact__c();
                 newAppContact.Contact__c = jobApp.Primary_Contact__c;
                 newAppContact.Job_Application__c = jobApp.Id;
                 newAppContact.Role__c = 'Primary Contact';
-                accountContactsToCreate.add(newAppContact);
+                applicationContactsToCreate.add(newAppContact);
             }
         }
 
-        insert accountContactsToCreate;
+        // Create any needed new Application Contact records
+        if (!applicationContactsToCreate.isEmpty()) {
+            // Bypass the App Contact trigger so that it does not check to update the Primary Contact
+            TriggerHandler.bypass('ApplicationContactTriggerHandler');
+
+            // Insert the new Application Contact records
+            insert applicationContactsToCreate;
+        }
     }
 }
