@@ -11,22 +11,43 @@ public with sharing class JobParser {
         // If callout pulled back any jobs, iterate through to build Job Applications
         if(jsonMap.containsKey('jobs')){
             List<Object> jobs = (List<Object>) jsonMap.get('jobs');
-            // Initialize containers for Account names and Job Application records
-            Set<String> companyNames = new Set<String>();
-            List<Job_Application__c> jobApplications = new List<Job_Application__c>();
             
+            // Initialize a set to hold unique Account names and a map fro Job Application ext Ids = Job Application Record
+            Set<String> companyNames = new Set<String>();
+            Map<String, Job_Application__c> idToJobAppMap = new Map<String, Job_Application__c>();
+                        
+            // Build Job_Application__c records from jsonMap's jobs
             for(Object jobObject : jobs){
                 Map<String,Object> job = (Map<String,Object>) jobObject;
+                
                 // Reject Jobs with null or blank company names
                 if(String.isBlank((String)job.get('company'))){
                     continue;
                 }
+                
                 // Create new Job_Application__c record from job
                 Job_Application__c jobApp = new Job_Application__c();
                 jobApp.Status__c = 'Saved';
                 jobApp.Company_Name__c = (String)job.get('company');
                 jobApp.Position_Title__c = (String)job.get('title');
                 jobApp.Job_Posting_URL__c = (String)job.get('link');
+
+                // Add External ID when present
+                if(job.containsKey('id') && job.get('id') != null){
+                    Object jobId = job.get('id');
+                    // Handle multiple types
+                    if(jobId instanceof String){
+                        jobApp.Job_Integration_ID__c = (String)jobId;
+                    } else if(jobId instanceof Integer){
+                        jobApp.Job_Integration_ID__c = String.valueOf((Integer)jobId);
+                    } else if(jobId instanceof Long){
+                        jobApp.Job_Integration_ID__c = String.valueOf((Long)jobId);
+                    } else{
+                        System.debug('Unexpected job ID type: ' + jobId);
+                        continue; // Skip this record, which has corrupted data
+                    }                
+                }
+                
                 // Clean Job Description Snippet of HTML tags and entities and set jobApp job description field
                 String rawSnippet = (String)job.get('snippet');
                 jobApp.Job_Description__c = rawSnippet
@@ -46,11 +67,11 @@ public with sharing class JobParser {
                 }
                 // Add current iterating jobApp and companyName to respective containers
                 companyNames.add(jobApp.Company_Name__c);
-                jobApplications.add(jobApp);
+                idToJobAppMap.put(jobApp.Job_Integration_ID__c, jobApp);
                 
             }
-            // Send Set of companyNames and List of jobApplications to be processed in Service Class
-            JobApplicationService.processJobApplications(companyNames, jobApplications);
+            // Send Set of companyNames, then map of new Job Ids to jobApplications to be processed in Service Class
+            JobApplicationService.processJobApplications(companyNames, idToJobAppMap);
         }
     }
 
@@ -66,7 +87,7 @@ public with sharing class JobParser {
             return null;
         }
         // Standardize input and initialize return variable
-        salaryText.trim().toLowerCase();
+        salaryText = salaryText.trim().toLowerCase();
         Decimal annualSalary = null;
 
         // Process salary conversion in a Try-Catch block to account for non-standard information coming back from integration.
@@ -105,7 +126,6 @@ public with sharing class JobParser {
         } else {
             annualSalary = Decimal.valueOf(salaryText.trim());
         }
-
         return annualSalary;
     }
 }
