@@ -118,7 +118,10 @@ public with sharing class JobParser {
         salaryText = salaryText.replace('$', '').replace(',', '').trim();
 
         // Handle known patterns
-        if(salaryText.endsWith('/hr')) {
+        if(salaryText.endsWith('per hour')) {
+            Decimal hourlyRate = Decimal.valueOf(salaryText.replace('per hour', '').trim());
+            annualSalary = hourlyRate * 40 * 50; // Hourly Rate * 40 hours/week * 50 weeks/year
+        } else if(salaryText.endsWith('/hr')) {
             Decimal hourlyRate = Decimal.valueOf(salaryText.replace('/hr', '').trim());
             annualSalary = hourlyRate * 40 * 50; // Hourly Rate * 40 hours/week * 50 weeks/year
         } else if(salaryText.endsWith('k')){
