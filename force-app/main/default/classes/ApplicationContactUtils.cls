@@ -41,8 +41,12 @@ public with sharing class ApplicationContactUtils {
             // Bypass the Job Application trigger handler so that it does not try to make new App Contact records
             TriggerHandler.bypass('JobApplicationTriggerHandler');
 
-            // Update the Job Apps
-            update appsToUpdate;
+            try {
+                // Update the Job Apps
+                update appsToUpdate;
+            } catch (Exception e) {
+                system.debug('Unable to update Primary Contact for Job Application. Error: ' + e.getMessage());
+            }
         }
     }
 }

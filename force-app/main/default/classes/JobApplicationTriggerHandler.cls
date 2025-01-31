@@ -62,7 +62,6 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
         if (!appsWithNewStatus.isEmpty()) {
             JobApplicationUtils.createTasks(appsWithNewStatus);
         }
-        
         // Use checkForPrimaryChange to only create Application Contacts who have new Primary Contacts
         List<Job_Application__c> appsWithNewPrimary = JobApplicationUtils.checkForPrimaryChange(newList, oldMap);
         if (!appsWithNewPrimary.isEmpty()) {

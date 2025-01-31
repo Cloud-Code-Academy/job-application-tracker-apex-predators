@@ -38,11 +38,13 @@ public with sharing class JobApplicationUtils {
 
         if (!appIds.isEmpty()) {
             // Get all Application Contacts for Job Applications that need a Primary Contact
-            List<Application_Contact__c> contacts = [SELECT Id, Name FROM Application_Contact__c WHERE Job_Application__c IN :appIds];
-            for (Application_Contact__c con : contacts) {
-                // If no contact has been found yet for an application, record this one
-                if (!contactsForApps.keySet().contains(con.Job_Application__c)) {
-                    contactsForApps.put(con.Job_Application__c, con);
+            List<Application_Contact__c> contacts = [SELECT Id, Name, Job_Application__c, Contact__c FROM Application_Contact__c WHERE Job_Application__c IN :appIds];
+            if (!contacts.isEmpty()) {
+                for (Application_Contact__c con : contacts) {
+                    // If no contact has been found yet for an application, record this one
+                    if (!contactsForApps.keySet().contains(con.Job_Application__c)) {
+                        contactsForApps.put(con.Job_Application__c, con);
+                    }
                 }
             }
 
@@ -143,9 +145,13 @@ public with sharing class JobApplicationUtils {
             }
         }
 
-        // Insert the new Task records
         if (!newTasks.isEmpty()) {
-            insert newTasks;
+            try {
+                // Insert the new Task records
+                    insert newTasks;
+            } catch (Exception e) {
+                system.debug('Unable to create Tasks for Job Application. Error: ' + e.getMessage());
+            }
         }
     }
 
@@ -207,7 +213,6 @@ public with sharing class JobApplicationUtils {
             // If The Contact is already in the map, add the Job App to the List of App IDs
             if (contactWithApps.keySet().contains(appCon.Contact__c)) {
                 contactWithApps.get(appCon.Contact__c).add(appCon.Job_Application__c);
-
             // If the Contact is not in the map yet, add the Contact and a new List of App IDs to the map
             } else {
                 List<Id> appId = new List<Id>();
@@ -219,12 +224,16 @@ public with sharing class JobApplicationUtils {
         // For each Job App, if the Primary is changed and not null, check if the map contains the new Primary
         for (Job_Application__c app : newApps) {
             if (app.Primary_Contact__c != oldApps.get(app.id).Primary_Contact__c && app.Primary_Contact__c != null) {
+                // Check the Map keyset for the Primary Contact
                 if (contactWithApps.containsKey(app.Primary_Contact__c)) {
-                    // If the List for the new Primary does not contain the Job App, add the  App to the list to return
-                    if (!contactWithApps.get(app.Primary_Contact__c).contains(app.Id)) {
-                        newPrimaries.add(app);
+                    // If the List for the new Primary contains the Job App, continue to the next loop iteration
+                    if (contactWithApps.get(app.Primary_Contact__c).contains(app.Id)) {
+                        continue;
                     }
                 }
+                // If the Map does not contain the Contact or if it does and the List does not have the App, 
+                // add the App to the list to return
+                newPrimaries.add(app);
             }
         }
 
@@ -259,8 +268,13 @@ public with sharing class JobApplicationUtils {
             // Bypass the App Contact trigger so that it does not check to update the Primary Contact
             TriggerHandler.bypass('ApplicationContactTriggerHandler');
 
-            // Insert the new Application Contact records
-            insert applicationContactsToCreate;
+            try {
+                // Insert the new Application Contact records
+                insert applicationContactsToCreate;
+            } catch (Exception e) {
+                system.debug('Unable to create Application Contacts for Job Application. Error: ' + e.getMessage());
+            }
+            
         }
     }
 }
