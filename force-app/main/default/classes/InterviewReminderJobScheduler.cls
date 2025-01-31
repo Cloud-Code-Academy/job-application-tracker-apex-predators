@@ -1,6 +1,9 @@
 /**
  * InterviewScheduler
  * Schedules the InterviewReminderJob to run nightly at 3:00 AM.
+ * This needs to be "primed" by manually running the following line of code in Apex Anonymous:
+ *      InterviewReminderJobScheduler.scheduleJob();
+ * Once primed, the job will run nightly until deleted manually
  */
 public with sharing class InterviewReminderJobScheduler implements Schedulable{
     
@@ -14,19 +17,19 @@ public with sharing class InterviewReminderJobScheduler implements Schedulable{
     }
 
     /**
-     * Schedule the InterviewReminderJob
+     * Schedules the InterviewReminderJob to run daily at 3:00 Am
      */
     public static void scheduleJob(){
 
         String jobName = 'Interview Reminder Job';
         String cronExpression = '0 0 3 * * ?'; // 3:00 AM daily
 
-        // Abort duplicate jobs if they exist
+        // Check for existing scheduled jobs with same name and abort them to prevent duplicates
         for (CronTrigger ct : [SELECT Id FROM CronTrigger WHERE CronJobDetail.Name = :jobName]){
             System.abortJob(ct.Id);
         }
 
-        // Schedule the new job
+        // Schedule a new instance of the InterviewReminderJobScheduler
         System.schedule(jobName, cronExpression, new InterviewReminderJobScheduler());
     }
 }

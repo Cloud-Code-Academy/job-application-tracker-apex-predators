@@ -18,7 +18,7 @@ public with sharing class EmailService {
      * components (Subject, Body, List of email addresses) to send a single email to a list of recipients.
      */ 
     public static void sendEmail(List<EmailData> emailDataList){
-        if(emailDataList == null || emailDataList.isEmpty()){
+        if(emailDataList.isEmpty()){
             return;
         }
     

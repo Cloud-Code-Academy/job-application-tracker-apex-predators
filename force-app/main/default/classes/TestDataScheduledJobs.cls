@@ -1,15 +1,24 @@
+/**
+ * Utility class to generate test data for scheduled job testing
+ */
 public with sharing class TestDataScheduledJobs {
     
+    /**
+     * Generates test data, including a Contact, User, Job Application
+     * and 3 related Events, 2 negative cases and 1 positive case
+     * 
+     * @return List<Event> A list of test Event records inserted
+     */
     public static List<Event> generateData() {
 
-        // Create test contact
+        // Create and insert test contact
         Contact cont = new Contact(
             FirstName = 'John',
             LastName = 'Doe'
         );
         insert cont;
 
-        // Create test User
+        // Create and insert a test User
         Profile profile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
         User testUser = new User(
             FirstName = 'Jane',
@@ -25,6 +34,7 @@ public with sharing class TestDataScheduledJobs {
         );
         insert testUser;
 
+        // Create and insert a test Job Application record linked to the test user and test contact
         Job_Application__c testApp = new Job_Application__c(
             Position_Title__c = 'Salesforce Developer',
             Company_Name__c = 'Cloud Code Academy',
@@ -33,7 +43,7 @@ public with sharing class TestDataScheduledJobs {
         );
         insert testApp;
 
-        // Create 3 Events, 2 negative and 1 positive to test query
+        // Create and insert 3 Events, 2 negative and 1 positive to test query
         List<Event> eventList = new List<Event>();
         for(Integer i = 0; i < 3; i++){
             Event newEvent = new Event(
@@ -66,13 +76,13 @@ public with sharing class TestDataScheduledJobs {
         Id jobAppId = baseEvents[0].WhatId;
         Id ownerId = baseEvents[0].OwnerId; // has valid email
 
-        // Event Owner with no Email
+        // Create and insert another Event Owner with separate Email
         Profile ownerProfile = [Select Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
         User secondEmailUser = new User(
             FirstName = 'anotherEmail',
             LastName = 'User',
-            UserName = 'badEmail@example.com.' + System.currentTimeMillis(),
-            Email = 'email@example.com',
+            UserName = 'aEmail@example.com.' + System.currentTimeMillis(),
+            Email = 'aemail@example.com',
             Alias = 'auser',
             ProfileId = ownerProfile.Id,
             TimeZoneSidKey = 'America/New_York',
@@ -82,8 +92,10 @@ public with sharing class TestDataScheduledJobs {
         );
         insert secondEmailUser;
 
+        // Initialize Event list 
         List<Event> newEvents = new List<Event>();
 
+        // Generate event owned by a separate user with separate email address
         Event secondEmailEvent = new Event(
             Subject = 'Secondary User Email',
             WhoId = contactId,
@@ -94,7 +106,7 @@ public with sharing class TestDataScheduledJobs {
         secondEmailEvent.EndDateTime = secondEmailEvent.StartDateTime.addHours(1);
         newEvents.add(secondEmailEvent);
 
-        // Valid Events for Bulk Testing
+        // Create additional valid Events for Bulk Testing
         for(Integer i = 0; i < 25; i++){
             Event bulkEvent = new Event(
                 Subject = 'Bulk Event ' + i,
@@ -106,8 +118,9 @@ public with sharing class TestDataScheduledJobs {
         bulkEvent.EndDateTime = bulkEvent.StartDateTime.addHours(1);
         newEvents.add(bulkEvent);
         }
+        // Insert 
         insert newEvents;
-        newEvents.addAll(baseEvents);
+
         return newEvents;
     }
 }
