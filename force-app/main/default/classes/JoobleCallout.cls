@@ -1,7 +1,4 @@
 public with sharing class JoobleCallout implements Queueable, Database.AllowsCallouts {
-    // API endpoint, key, parameters
-    private static final String JOOBLE_API_URL = 'https://jooble.org/api/';
-    private static final String JOOBLE_API_KEY = '09651830-e80f-4179-90f3-fe6f8dc909a3';
     
     // Class variables
     private Map<String, String> paramMap; //Map containing parameters
@@ -17,8 +14,9 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
     public void execute(QueueableContext context){        
         
         //Set up the HTTP request to send
-        HttpRequest request = new HttpRequest();       
-        request.setEndpoint('callout:JoobleCallout'); // endpoint and header set with Named Credential
+        HttpRequest request = new HttpRequest();
+        // Named Credential 'JoobleCallout' used for authentication, header and endpoint management       
+        request.setEndpoint('callout:JoobleCallout');
         request.setMethod('POST');
         // Set body with generatePayload method
         request.setBody(generateJooblePayload(paramMap, days));
@@ -56,8 +54,6 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
             jsonMap.put(key, paramMap.get(key));
         }
         // Serialize and return the payload
-        system.debug(jsonMap);
-        system.debug(JSON.serialize(jsonMap));
         return JSON.serialize(jsonMap);        
     }
 }
