@@ -15,23 +15,23 @@ public with sharing class ApplicationContactUtils {
     * @param appContacts: list of Application Contact records
     */
     public static void setPrimaryContacts (List<Application_Contact__c> appContacts) {
-        // Create a map to hold the parent App IDs matches with the Application Contacts
-        Map<Id, Application_Contact__c> appIdsByContact = new Map<Id, Application_Contact__c>();
+        // Create a map to hold the parent App IDs matches with the Contacts
+        Map<Id, Id> appIdsByContact = new Map<Id, Id>();
         // Create a list to hold the Apps that need to be updated with the new Primary Contact
         List<Job_Application__c> appsToUpdate = new List<Job_Application__c>();
 
-        // For each passed in record, match it with its parent App record ID
+        // For each passed in record, match its parent App record ID with the parent Contact ID
         for (Application_Contact__c con : appContacts){
-            appIdsByContact.put(con.Job_Application__c, con);
+            appIdsByContact.put(con.Job_Application__c, con.Contact__c);
         }
 
         // Get all the Application records for the App Contacts that are elligible to become Primary Contact
-        List<Job_Application__c> apps = [SELECT Id, Name FROM Job_Application__c WHERE Id IN :appIdsByContact.keySet() AND Primary_Contact__c != null];
+        List<Job_Application__c> apps = [SELECT Id, Name FROM Job_Application__c WHERE Id IN :appIdsByContact.keySet() AND Primary_Contact__c = null];
 
         // Prepare to update the Primary Contact field
         if (!apps.isEmpty()) {
             for (Job_Application__c app : apps) {
-                app.Primary_Contact__c = appIdsByContact.get(app.Id).Id;
+                app.Primary_Contact__c = appIdsByContact.get(app.Id);
                 appsToUpdate.add(app);
             }
         }

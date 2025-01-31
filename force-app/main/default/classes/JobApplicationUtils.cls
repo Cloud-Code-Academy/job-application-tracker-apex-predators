@@ -2,7 +2,7 @@
 * 
 * JobApplicationUtils class executes static methods called from the JobApplicationTriggerHandler.cls class:
 * 
-* - setPrimaryContacts: For all Job Applications, if the Primcary_Contact__c field is null, see if the Job Application has any 
+* - setPrimaryContacts: For all Job Applications, if the Primary_Contact__c field is null, see if the Job Application has any 
 *         Application Contact records. If so, use the first one to set a new Primary Contact
 * 
 * - checkStatus: Check if the Status of the Job App has been updated
@@ -141,11 +141,11 @@ public with sharing class JobApplicationUtils {
                 newTasks.add(taskCreation(app, 1, 'Send Follow-Up Email', 'High','Send a follow-up email thanking the interviewer and asking for feedback.'));
                 newTasks.add(taskCreation(app, 5, 'Review and Reflect', 'Normal','Review your notes and reflect on areas of improvement.'));
             }
-            
-            // Insert the new Task records
-            if (!newTasks.isEmpty()) {
-                insert newTasks;
-            }
+        }
+
+        // Insert the new Task records
+        if (!newTasks.isEmpty()) {
+            insert newTasks;
         }
     }
 
@@ -197,18 +197,39 @@ public with sharing class JobApplicationUtils {
     public static List<Job_Application__c> checkForPrimaryChange (List<Job_Application__c> newApps, Map<Id, Job_Application__c> oldApps) {
         // Create a list and populate it with all App Contacts related to the passed in Apps
         List<Application_Contact__c> existingAppContacts = [SELECT Id, Contact__c, Job_Application__c FROM Application_Contact__c WHERE Job_Application__c IN :newApps];
+        // Map to match Contacts with the Apps they are associated with
+        Map<Id, List<Id>> contactWithApps = new Map<Id, List<Id>>();
+        // List to hold the Job Apps with changed Primary Contacts
+        List<Job_Application__c> newPrimaries = new List<Job_Application__c>();
 
-// add to map <contact id, list<app ids>> and then for each passed in app, see if the primary contact is in the map and if so, see if the list includes the app id
-        for (Integer i=0; i<newApps.size(); i++) {
-            if ((newApps[i].Primary_Contact__c != oldApps.get(newApps[i].Id).Primary_Contact__c) && (newApps[i].Primary_Contact__c != null)) {
-                for (Application_Contact__c appCon : existingAppContacts) {
-                    if ((appCon.Job_Application__c == newApps[i].Id) && (appCon.Contact__c == newApps[i].Primary_Contact__c)) {
-                        newApps.remove(i);
+        // Add each Contact with a App Contact record to a map with its Job Apps
+        for (Application_Contact__c appCon : existingAppContacts) {
+            // If The Contact is already in the map, add the Job App to the List of App IDs
+            if (contactWithApps.keySet().contains(appCon.Contact__c)) {
+                contactWithApps.get(appCon.Contact__c).add(appCon.Job_Application__c);
+
+            // If the Contact is not in the map yet, add the Contact and a new List of App IDs to the map
+            } else {
+                List<Id> appId = new List<Id>();
+                appId.add(appCon.Job_Application__c);
+                contactWithApps.put(appCon.Contact__c, appId);
+            }
+        }
+
+        // For each Job App, if the Primary is changed and not null, check if the map contains the new Primary
+        for (Job_Application__c app : newApps) {
+            if (app.Primary_Contact__c != oldApps.get(app.id).Primary_Contact__c && app.Primary_Contact__c != null) {
+                if (contactWithApps.containsKey(app.Primary_Contact__c)) {
+                    // If the List for the new Primary does not contain the Job App, add the  App to the list to return
+                    if (!contactWithApps.get(app.Primary_Contact__c).contains(app.Id)) {
+                        newPrimaries.add(app);
                     }
                 }
             }
         }
-        return newApps;
+
+        // Return the list of the Job Apps with a new Primary value and no corresponding App Contact
+        return newPrimaries;
     }
 
     /* 
