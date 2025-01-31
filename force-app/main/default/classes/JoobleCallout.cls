@@ -4,14 +4,12 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
     private static final String JOOBLE_API_KEY = '09651830-e80f-4179-90f3-fe6f8dc909a3';
     
     // Class variables
-    private String keywords; //keywords for job title search
-    private String location; // location for job search
+    private Map<String, String> paramMap; //Map containing parameters
     private Integer days;    // how many days ago for a job created date
 
     // Class constructor
-    public JoobleCallout (String keywords, String location, Integer days){
-        this.keywords = keywords;
-        this.location = location;
+    public JoobleCallout (Map<String, String> paramMap, Integer days){
+        this.paramMap = paramMap;
         this.days = days;
     }
     
@@ -24,7 +22,7 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
         request.setMethod('POST');
         request.setHeader('Content-Type', 'application/json');
         // Set body with generatePayload method
-        request.setBody(generateJooblePayload(keywords, location, days));
+        request.setBody(generateJooblePayload(paramMap, days));
         
         // Send the HTTP request and get the response
         Http http = new Http();
@@ -37,20 +35,19 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
         }
     }
 
-    private static String generateJooblePayload(String keywords, String location, Integer days){
+    private static String generateJooblePayload(Map<String, String> paramMap, Integer days){
 
         // Calculate and format the date X days ago
         String formattedDate = Date.today().addDays(-days).format();
-        System.debug(formattedDate);
-        System.debug(keywords);
-        System.debug(location);
+
         // Build payload map
-        Map<String,Object> jsonMap = new Map<String,Object>{
-            'keywords' => keywords,
-            'location' => location,
-            'datecreatedfrom' => formattedDate,
-            'salary' => '65000'        
-        };
+        Map<String,Object> jsonMap = new Map<String,Object>();
+        // Always include the datecreatedfrom parameter
+        jsonMap.put('datecreatedfrom', formattedDate);
+        for(String key : paramMap.keySet()){
+            // Dynamically fill jsonMap from user defined settings
+            jsonMap.put(key, paramMap.get(key));
+        }
         // Serialize and return the payload
         system.debug(jsonMap);
         system.debug(JSON.serialize(jsonMap));

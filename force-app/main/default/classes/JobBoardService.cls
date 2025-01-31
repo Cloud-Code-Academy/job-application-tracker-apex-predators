@@ -2,7 +2,7 @@ public with sharing class JobBoardService {
     
     /**
      * Fetches job search parameters for given job board (e.g., "Jooble")
-     * @param jobBoard The name of the job board to be used (e.g., "Jooble)
+     * @param jobBoard The name of the job board to be used (e.g., "Jooble")
      * @return Map containing json key-value pairs for specific job board 
      */
     public static Map<String,String> getJobSearchParams(String jobBoard){
@@ -25,15 +25,18 @@ public with sharing class JobBoardService {
             settings = settingsList[0];
         }
 
-        // Store parameters in map
-        if(!String.isBlank(settings.Desired_Location__c)){
-            paramMap.put('location', settings.Desired_Location__c);
-        }
-        if(!String.isBlank(settings.Keyword__c)){
-            paramMap.put('keywords', settings.Keyword__c);
-        }
-        if(settings.Desired_Salary__c != null){
-            paramMap.put('salary', String.valueOf(settings.Desired_Salary__c));
+        // Configure map according to Specific Job Board
+        if(jobBoard == 'Jooble'){
+            // Store parameters in map
+            if(!String.isBlank(settings.Desired_Location__c)){
+                paramMap.put('location', settings.Desired_Location__c);
+            }
+            if(!String.isBlank(settings.Keyword__c)){
+                paramMap.put('keywords', settings.Keyword__c);
+            }
+            if(settings.Desired_Salary__c != null){
+                paramMap.put('salary', String.valueOf(settings.Desired_Salary__c));
+            }
         }
 
         return paramMap;        

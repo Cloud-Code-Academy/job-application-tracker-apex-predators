@@ -1,7 +1,10 @@
 public with sharing class JoobleScheduler implements Schedulable {
     
     public void execute(SchedulableContext sc) {
-        JoobleCallout job = new JoobleCallout('Salesforce developer administrator', 'Remote', 1);
+        // Fetch the callout parameters from Job App Settings record
+        Map<String, String> paramMap = JobBoardService.getJobSearchParams('Jooble');
+        // Enqueue callout with parameters        
+        JoobleCallout job = new JoobleCallout(paramMap, 1);
         System.enqueueJob(job);
     }
 
