@@ -18,20 +18,27 @@ public with sharing class JoobleCallout implements Queueable, Database.AllowsCal
         
         //Set up the HTTP request to send
         HttpRequest request = new HttpRequest();       
-        request.setEndpoint(JOOBLE_API_URL + JOOBLE_API_KEY);
+        request.setEndpoint('callout:JoobleCallout'); // endpoint and header set with Named Credential
         request.setMethod('POST');
-        request.setHeader('Content-Type', 'application/json');
         // Set body with generatePayload method
         request.setBody(generateJooblePayload(paramMap, days));
         
-        // Send the HTTP request and get the response
+        // Send the HTTP request and get the response.  In case of failure, send email to System Admins
         Http http = new Http();
-        HttpResponse response = http.send(request);
-
-        // Check Response
-        if(response.getStatusCode() >= 200 && response.getStatusCode() <= 299){
-            String jsonResponseBody = response.getBody();
-            JobParser.parseJoobleApps(jsonResponseBody);
+        String failMessage;
+        try{
+            HttpResponse response = http.send(request);    
+            // Check Response
+            if(response.getStatusCode() >= 200 && response.getStatusCode() <= 299){
+                String jsonResponseBody = response.getBody();
+                JobParser.parseJoobleApps(jsonResponseBody);
+            } else {
+                failMessage = 'HTTP Error: ' + response.getStatusCode() + ' - ' + response.getBody();
+                JobApplicationService.sendErrorEmail('HTTP Error', failMessage);
+            }
+        } catch (Exception e){
+            failMessage = 'Callout failed: ' + e.getMessage();
+            JobApplicationService.sendErrorEmail('Jooble Callout Error', failMessage);
         }
     }
 
