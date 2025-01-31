@@ -25,7 +25,8 @@ public with sharing class JobBoardService {
             settings = settingsList[0];
         }
 
-        // Configure map according to Specific Job Board
+        // Configure map according to Specific Job Board. This is a placeholder for future job board integrations.
+        // Currently supports only Jooble, but if extended to other job boards, custom metadata/settings would be used.
         if(jobBoard == 'Jooble'){
             // Store parameters in map
             if(!String.isBlank(settings.Desired_Location__c)){
@@ -35,10 +36,9 @@ public with sharing class JobBoardService {
                 paramMap.put('keywords', settings.Keyword__c);
             }
             if(settings.Desired_Salary__c != null){
-                paramMap.put('salary', String.valueOf(settings.Desired_Salary__c));
+                paramMap.put('salary', String.valueOf((Integer)settings.Desired_Salary__c));
             }
         }
-
         return paramMap;        
     } 
     
@@ -52,7 +52,6 @@ public with sharing class JobBoardService {
             Desired_Location__c = 'Remote',
             Keyword__c = 'Salesforce Administrator Developer'
         );
-
         insert settings;
         return settings;
     }
