@@ -8,7 +8,13 @@ public with sharing class JoobleScheduler implements Schedulable {
         System.enqueueJob(job);
     }
 
-    // Schedule the job to run nightly
+    /**
+     * Schedule the job to run nightly at midnight.
+     *  
+     * If this job is ever deleted, it can be reregistered by executing the following Anonymous Apex"
+     *      JoobleScheduler.scheduleJob();
+     * This will create a new scheduled job to run nightly at midnight.  
+     */ 
     public static void scheduleJob(){
         String jobName = 'Nightly Jooble Callout';
         String cronExpression = '0 0 0 * * ?'; // every night at midnight
