@@ -2,7 +2,7 @@
 * 
 * JobApplicationUtils class executes static methods called from the JobApplicationTriggerHandler.cls class:
 * 
-* - setPrimaryContacts: For all Job Applications, if the Primary_Contact__c field is null, see if the Job Application has any 
+* - setPrimaryContact: For all Job Applications, if the Primary_Contact__c field is null, see if the Job Application has any 
 *         Application Contact records. If so, use the first one to set a new Primary Contact
 * 
 * - checkStatus: Check if the Status of the Job App has been updated
@@ -11,23 +11,25 @@
 * 
 * - taskCreation: Create a task and populate all fields
 * 
-* - createAppContact: check for existing Application Contact records and make one for the the ob App's Primary Contact if none found
+* - createAppContact: check for existing Application Contact records and make one for the Job App's Primary Contact if none found
 *  
 */
 public with sharing class JobApplicationUtils {
     /*
     * 
-    * setPrimaryContacts identifies all Job Application records that are missing Primary_Contact__c.
+    * setPrimaryContact identifies all Job Application records that are missing Primary_Contact__c.
     * It then finds Application Contact records for the Job Applications and saves the first one for
     * each of the Apps. If at least one was found, use that Contact as the App's Primary Contact
     * 
     * @param apps: list of Job Application records
     */
-    public static void setPrimaryContacts(List<Job_Application__c> apps) {
+    public static void setPrimaryContact(List<Job_Application__c> apps) {
         // Create a list to hold the IDs of the Job Apps that are missing Primary Contact
         List<Id> appIds = new List<Id>();
         // Create a map to hold the App Id for each App Contact that will be used
-        Map<Id, Application_Contact__c> contactsForApps = new Map<Id, Application_Contact__c>();
+        Map<Id, Id> contactsForApps = new Map<Id, Id>();
+        // Create a list of the Apps to be updated
+        List<Job_Application__c> jobApps = new List<Job_Application__c>();
 
         // Get the Id of every Job Application that needs a Primary Contact
         for (Job_Application__c app: apps) {
@@ -43,7 +45,7 @@ public with sharing class JobApplicationUtils {
                 for (Application_Contact__c con : contacts) {
                     // If no contact has been found yet for an application, record this one
                     if (!contactsForApps.keySet().contains(con.Job_Application__c)) {
-                        contactsForApps.put(con.Job_Application__c, con);
+                        contactsForApps.put(con.Job_Application__c, con.Contact__c);
                     }
                 }
             }
@@ -52,8 +54,11 @@ public with sharing class JobApplicationUtils {
                 // Get the records that need a Primary Contact and retrieve contact from map and set it on the Job App
                 List<Job_Application__c> appToUpdate = [SELECT Id, Name, Primary_Contact__c FROM Job_Application__c WHERE Id IN :appIds];
                 for (Job_Application__c app : appToUpdate) {
-                    app.Primary_Contact__c = contactsForApps.get(app.Id).Id;
+                    app.Primary_Contact__c = contactsForApps.get(app.Id);
+                    jobApps.add(app);
                 }
+                // Update the Apps to have Primary Contact
+                update jobApps;
             }
         }
     }

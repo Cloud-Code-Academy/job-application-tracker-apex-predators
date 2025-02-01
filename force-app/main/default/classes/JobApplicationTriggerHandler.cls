@@ -3,7 +3,7 @@
 * The JobApplicationTriggerHandler class executes the following actions:
 * 
 * - Before Update:
-*    - setPrimaryContacts: use associated Application Contact records to 
+*    - setPrimaryContact: use associated Application Contact records to 
 *         ensure records have a Primary Contact
 * 
 * - After Insert:
@@ -16,10 +16,6 @@
 *   - createAppContact: when Primary Contact is set or updated, make sure there
 *         is an Application Contact record for that Contact and Application
 * 
-* After Undelete:
-*    - setPrimaryContacts: use associated Application Contact records to 
-*         ensure records have a Primary Contact
-* 
 */
 public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
     // Create class variables
@@ -30,17 +26,6 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
     public JobApplicationTriggerHandler() {
         this.newList = (List<Job_Application__c>)Trigger.new;
         this.oldMap = (Map<Id,Job_Application__c>)Trigger.oldMap;
-    }
-
-    /*
-    * 
-    * Before Save Methods
-    * 
-    */
-    
-    // Before Update method sets Primary Contact if it is null
-    public override void beforeUpdate() {
-        JobApplicationUtils.setPrimaryContacts(newList);
     }
 
     /*
@@ -57,6 +42,9 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
 
     // After Update methods create Tasks and App Contact related records
     public override void afterUpdate() {
+        // Set Primary Contact if it is null
+        JobApplicationUtils.setPrimaryContact(newList);
+        
         // Use checkStatus to only create tasks for Job Apps with changed Status
         List<Job_Application__c> appsWithNewStatus = JobApplicationUtils.checkStatus(newList, oldMap);
         if (!appsWithNewStatus.isEmpty()) {
@@ -68,11 +56,4 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
             JobApplicationUtils.createAppContact(appsWithNewPrimary);
         }
     }
-    
-    // After Undelete  method sets the Primary Contact if it is null
-    public override void afterUndelete() {
-        JobApplicationUtils.setPrimaryContacts(newList);
-    }
-
-
 }
