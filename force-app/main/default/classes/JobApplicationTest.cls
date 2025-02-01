@@ -5,7 +5,7 @@
 *      - JobApplicationUtils.cls
 * 
 * - testSetPrimaryContact: Checks that if Primary_Contact__c is null and the record is updated or undeleted, if the
-*      record has any Application Contacts, use the first one to set Primary__Contact__c
+*      record has any Application Contacts, use the first one to set Primary_Contact__c
 * 
 * - testCreateTasks: Checks that the proper number of tasks have been created when reord is created or updated
 * 
@@ -17,13 +17,61 @@
 public with sharing class JobApplicationTest {
     @isTest
     public static void testSetPrimaryContact() {
-        // make 2 apps
-        // add 2 contacts
-        // set contact 1 as primary on app 1 and app 2
-        // make app contact records for contact 2 with both apps
-        // update app 1 to add a role or something
-        // update app 2 to remove the primary contact (make null). and can do something else too but not needed
-        // check that app 1 is still contact 1 and app 2 is now contact 2. Can do by making sure each contact has 1 job app or something
+        // Make 2 Contacts
+        List<Contact> contactList = new List<Contact>();
+        for (Integer i = 0; i<2; i++) {
+            Contact con = new Contact();
+            con.FirstName = String.valueOf(i+1);
+            con.LastName = 'McTesty';
+            contactList.add(con);
+        }
+        // Insert the Contacts
+        insert contactList;
+
+        // Query the created Contacts
+        List<Contact> createdContacts = [Select Id, FirstName, LastName FROM Contact ORDER BY FirstName];
+
+        // Make 2 Job Apps. Have Contact 1 as primary contact on App 1 and no primary on App 2
+        Job_Application__c app1 = new Job_Application__c(Primary_Contact__c = createdContacts[0].Id);
+        Job_Application__c app2 = new Job_Application__c(Primary_Contact__c = createdContacts[0].Id);
+        List<Job_Application__c> appList = new List<Job_Application__c>{app1, app2};
+
+        // Insert the Job Applications
+        insert appList;
+        
+        // Query the created Job Applications
+        List<Job_Application__c> createdApps = [SELECT Id, Name, Primary_Contact__c FROM Job_Application__c ORDER BY Name];
+
+        // Make 2 App Contact records: Contact 2 for each Job App
+        Application_Contact__c appCon1 = new Application_Contact__c();
+        appCon1.Job_Application__c = createdApps[0].Id;
+        appCon1.Contact__c = createdContacts[1].Id;
+        Application_Contact__c appCon2 = new Application_Contact__c();
+        appCon2.Job_Application__c = createdApps[1].Id;
+        appCon2.Contact__c = createdContacts[1].Id;
+        List<Application_Contact__c> appConList = new List<Application_Contact__c>{appCon1, appCon2};
+
+        // Update app 1 to add a Company and update app 2 to remove the primary contact (make null) and its first Application Contact record. 
+        createdApps[0].Company_Name__c = 'Test Company';
+        createdApps[1].Primary_Contact__c = null;
+
+        // Find the Application Contact record to remove
+        Application_Contact__c removeAppCon = [SELECT Id FROM Application_Contact__c WHERE Job_Application__c = :createdApps[1].Id AND Contact__c = :createdContacts[0].Id LIMIT 1];
+        delete removeAppCon;
+        
+        test.startTest();
+        update createdApps;
+        test.stopTest();
+
+        // Check that App 1 is still Contact 1 and App 2 is now Contact 2 by checking each Contact has 1 Job App
+        // Query the Job Applications by Primary Contact
+        List<Job_Application__c> checkApp1 = [SELECT Id, Name, Primary_Contact__c FROM Job_Application__c WHERE Primary_Contact__c = :createdContacts[0].Id];
+        List<Job_Application__c> checkApp2 = [SELECT Id, Name, Primary_Contact__c FROM Job_Application__c WHERE Primary_Contact__c = :createdContacts[1].Id];
+
+        // Check that App 1 has not had its Primary Contact overwritten by making sure checkApp1 has exactly 1 record
+        Assert.areEqual(1, checkApp1.size(), 'You have the wrong number of Job Applications with Contact 1');
+        // Check that App 2 has not had its Primary Contact overwritten by making sure checkApp2 has exactly 1 record
+        Assert.areEqual(1, checkApp2.size(), 'You have the wrong number of Job Applications with Contact 2');
 
     }
 
