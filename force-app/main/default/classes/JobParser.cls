@@ -107,27 +107,30 @@ public with sharing class JobParser {
 
     /**
      * Parses a single salary (text) and converts it to an annual salary (Decimal).
-     * @param salaryText single salary to parse (e.g., "$80k" or $50/hr)
+     * @param salaryText single salary to parse (e.g., "$80k" or "$50/hr")
      * @return annualSalary - a Decimal representation of the highest expected annual salary.
      */
 
     private static Decimal parseSingleSalary(String salaryText){
 
+        // If salary pattern is unworkable return null
+        if (String.isBlank(salaryText) || salaryText.containsNone('0123456789')) {
+            return null;
+        }
+
         // Initialize return variable and standardize input
-        Decimal annualSalary = null;
+        Decimal annualSalary;
         salaryText = salaryText.replace('$', '').replace(',', '').trim();
+        
 
         // Handle known patterns
-        if(salaryText.endsWith('per hour')) {
-            Decimal hourlyRate = Decimal.valueOf(salaryText.replace('per hour', '').trim());
+        if(salaryText.contains('hour') || salaryText.contains('hr')) {
+            Decimal hourlyRate = Decimal.valueOf(salaryText.replaceAll('[^0-9.]', '').trim());            
             annualSalary = hourlyRate * 40 * 50; // Hourly Rate * 40 hours/week * 50 weeks/year
-        } else if(salaryText.endsWith('/hr')) {
-            Decimal hourlyRate = Decimal.valueOf(salaryText.replace('/hr', '').trim());
-            annualSalary = hourlyRate * 40 * 50; // Hourly Rate * 40 hours/week * 50 weeks/year
-        } else if(salaryText.endsWith('k')){
-            annualSalary = Decimal.valueOf(salaryText.replace('k', '').trim()) * 1000;
+        } else if(salaryText.contains('k')){
+            annualSalary = Decimal.valueOf(salaryText.replaceAll('[^0-9.]', '').trim()) * 1000;
         } else {
-            annualSalary = Decimal.valueOf(salaryText.trim());
+            annualSalary = Decimal.valueOf(salaryText.replaceAll('[^0-9.]', '').trim());
         }
         return annualSalary;
     }
