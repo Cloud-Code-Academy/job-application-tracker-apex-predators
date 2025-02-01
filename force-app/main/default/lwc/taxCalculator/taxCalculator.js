@@ -30,26 +30,28 @@ import { RefreshEvent } from 'lightning/refresh';
 
 export default class TaxCalculator extends LightningElement {
 
-    salary                              = 0;
     salaryFromRecord                    = 0;
+    formattedSalaryFromRecord           = 0;
     weeklyPay                           = 0;
+    formattedWeeklyPay                  = 0;
     biWeeklyPay                         = 0;
-    monthlyPay                          = 0;
-    sixMonthPay                         = 0;
-    yearlyPay                           = 0;
-    socialSecurityTaxOwed               = 0;
-    medicareTaxOwed                     = 0;
-    fedTaxOwed                          = 0;
-    totalTaxes                          = 0;
-    formattedFedTaxOwed                 = 0;
-    formattedMedicareTaxOwed            = 0;
-    formattedSocialSecurityTaxOwed      = 0;
-    formattedYearlyPay                  = 0;
-    formattedWeeklyPay                  = 0;    
-    formattedTotalTaxes                 = 0;
     formattedBiWeeklyPay                = 0;
-    formattedSixMonthPay                = 0;
+    monthlyPay                          = 0;
     formattedMonthlyPay                 = 0;
+    sixMonthPay                         = 0;
+    formattedSixMonthPay                = 0;
+    yearlyPay                           = 0;
+    formattedYearlyPay                  = 0;
+    socialSecurityTaxOwed               = 0;
+    formattedSocialSecurityTaxOwed      = 0;
+    medicareTaxOwed                     = 0;
+    formattedMedicareTaxOwed            = 0;
+    fedTaxOwed                          = 0;
+    formattedFedTaxOwed                 = 0;
+    totalTaxes                          = 0;
+    formattedTotalTaxes                 = 0;
+
+    
 
 
 
@@ -157,6 +159,7 @@ export default class TaxCalculator extends LightningElement {
         this.formattedMonthlyPay = this.monthlyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
         this.formattedBiWeeklyPay = this.biWeeklyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
         this.formattedWeeklyPay = this.weeklyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        this.formattedSalaryFromRecord = this.salaryFromRecord.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 
 
         console.log(`Fed Tax Owed: ${this.fedTaxOwed}, Social Security: ${this.socialSecurityTaxOwed}, Medicare: ${this.medicareTaxOwed}`);
