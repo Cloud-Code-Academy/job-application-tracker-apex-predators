@@ -109,4 +109,20 @@ public with sharing class JoobleCalloutTest {
         // Assert that exactly one job is scheduled with the name "Interview Reminder Job"
         Assert.isTrue(jobs.size() == 1, 'Scheduler should have exactly one scheduled job');
     }
+
+    /**
+     * Test the JoobleSettingsCalloutService, ensuring that it properly enqueues a job when invoked.
+     */
+    @isTest
+    static void testJoobleSettingsCalloutService(){
+
+        // Run test
+        Test.startTest();
+        JoobleSettingsCalloutService.triggerJoobleCallout();
+        Test.stopTest();
+
+        // Verify job was enqueued
+        Integer jobsEnqueued = [SELECT COUNT() FROM AsyncApexJob WHERE JobType = 'Queueable'];
+        Assert.areEqual(1, jobsEnqueued, 'Queueable job should have been enqueued');
+    }
 }
