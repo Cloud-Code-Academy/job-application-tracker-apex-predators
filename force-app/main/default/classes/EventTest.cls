@@ -11,6 +11,7 @@
 public with sharing class EventTest {
     @isTest
     public static void testEventOverlapValidate() {
+        // Datetime format: YYYY-MM-DDTHH:MM:SS.SZ
         // Make 1 event that will be pre-existing. Use today + 12 months and choose a time like 2-4
         // Make an event that starts during that event. Maybe 3-5. Make sure it errors
         // Make an event that ends during that event. Maybe 1-3. Make sure it errors
