@@ -38,9 +38,6 @@ public with sharing class ApplicationContactUtils {
         
         // Update the Job Applications if at least 1 of them has a new Primary Contact
         if(!appsToUpdate.isEmpty()){
-            // Bypass the Job Application trigger handler so that it does not try to make new App Contact records
-            TriggerHandler.bypass('JobApplicationTriggerHandler');
-
             try {
                 // Update the Job Apps
                 update appsToUpdate;

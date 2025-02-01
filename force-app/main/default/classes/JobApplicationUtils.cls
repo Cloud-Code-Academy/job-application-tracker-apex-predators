@@ -270,9 +270,6 @@ public with sharing class JobApplicationUtils {
 
         // Create any needed new Application Contact records
         if (!applicationContactsToCreate.isEmpty()) {
-            // Bypass the App Contact trigger so that it does not check to update the Primary Contact
-            TriggerHandler.bypass('ApplicationContactTriggerHandler');
-
             try {
                 // Insert the new Application Contact records
                 insert applicationContactsToCreate;
