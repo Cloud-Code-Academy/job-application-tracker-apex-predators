@@ -1,31 +1,65 @@
-.strong-text {
-    font-weight: bold;
-}
-
-
-:host {
-
-    background-color: var(--slds-g-color-background, #ff784f); /* Sets the surface background color */
-}
-
-
-.custom-section {
-    background-color: var(--slds-g-color-palette-teal-95); /* Uses SLDS border color */
-    box-shadow: shadow-4;
+.outer-container {
     border-radius: 10px;        /* Rounded corners for the entire calculator */
     padding: 10px;
+    background-color: #f5f5f5;
     width: 100%; 
     box-sizing: border-box; 
 }
 
-.custom-box {
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2); /* Custom shadow */
-    padding: 20px;
-    border-radius: 12px; /* Optional: smooth edges */
-    background: white; /* Ensure the shadow is visible */
+.strong-text {
+    font-weight: bold;
 }
 
-.yearly-pay {
+.resources {
+    padding-bottom: 10px;
+}
+
+.bubble-header-text {
+    font-weight: bold;
+    font-size: 25px;
+    text-decoration: underline;
+    color: #3f51b5;
+
+}
+
+.padding-above {
+
+    padding-top: 30px;
+
+}
+
+:host {
+
+    --sds-c-card-color-background: #c7d5f1; /* Sets the surface background color */
+}
+
+.yearly-pay-label {
     font-weight: bolder;
     font-size: 30px;
+    color: #3f51b5;
+    padding-bottom: 05px;
+    
+
+    
+}
+
+.yearly-pay-output {
+    font-weight: bolder;
+    font-size: 30px;
+    padding-bottom: 20px;
+
+}
+
+.resources-section {
+    font-weight: bolder;
+    font-size: 25px;
+    padding: 20px 30px;
+
+}
+
+.fix-slds-boxes {
+
+    border-radius: 60px;
+    padding: 10px;
+
 }

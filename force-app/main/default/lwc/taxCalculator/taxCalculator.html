@@ -1,5 +1,5 @@
 <template>
-    <div class="custom-section" >
+    <div class="outer-container" >
         <lightning-card 
             title="Take Home Pay Calculator"
             class="custom-section" >
@@ -27,18 +27,19 @@
 
 
 
-            <div class="yearly-pay slds-align_absolute-center">Position Salary:
+            <div class="yearly-pay-label slds-align_absolute-center">Position Salary:
             </div>
-            <div class="yearly-pay slds-align_absolute-center">${salaryFromRecord} 
+            <div class="yearly-pay-output slds-align_absolute-center">${formattedSalaryFromRecord} 
             </div>
             
 
-            <div class="slds-grid ">
-                <div class="slds-box slds-col slds-small-size slds-p-around_medium slds-align_absolute-center custom-section custom-box">
+            <div class="slds-grid">
+                <div class="slds-box slds-m-right_x-large slds-m-left_x-large slds-col slds-small-size slds-p-around_large slds-align_absolute-center fix-slds-boxes slds-theme_shade">
                 <span>
                     <p><lightning-formatted-text 
-                        class="strong-text slds-p-around_x-large"
-                        value="Tax Information" 
+                        class="bubble-header-text"
+                        value="Tax Information"
+                        style="width: 250px;" 
                     ></lightning-formatted-text></p>
                     <p><lightning-formatted-text 
                         class="strong-text slds-p-around_x-large"
@@ -84,10 +85,10 @@
                     ></lightning-input>
                 </span>
                 </div>
-                <div class="slds-box slds-col slds-small-size slds-p-around_medium slds-align_absolute-center custom-section custom-box">
+                <div class="slds-box slds-m-right_x-large slds-m-left_x-large slds-col slds-small-size slds-p-around_large slds-align_absolute-center fix-slds-boxes slds-theme_shade ">
                     <span>
                         <p><lightning-formatted-text 
-                            class="strong-text slds-p-around_x-large"
+                            class="bubble-header-text"
                             value="Net Pay" 
                         ></lightning-formatted-text></p>
                         <p><lightning-formatted-text 
@@ -134,23 +135,25 @@
                 </div>
                 
             </div>
-            <div class="yearly-pay slds-align_absolute-center">Yearly Pay After Taxes: 
+            <div class="yearly-pay-label slds-align_absolute-center padding-above">Yearly Pay After Taxes: 
             </div>
-            <div class="yearly-pay slds-align_absolute-center">${formattedYearlyPay} 
+            <div class="yearly-pay-output slds-align_absolute-center">${formattedYearlyPay} 
             </div>
 
             <!-- Possible links to additional resources -->
             
-            <p class="slds-p-horizontal_small custom-section strong-text">Tax Info Resources</p>
-
-                <ul class="slds-text-align_left slds-text-heading_small slds-var-p-top_medium  slds-list_dotted">
-                    <li class="resourceLi custom-section">
+            <div class="resources-section">Tax Resources:
+                
+                <ul class="slds-text-align_left slds-text-heading_small slds-var-p-top_medium  slds-list_dotted"
+                    label= "Tax Info Resources">
+                    <li class="resourceLi">
                         <a href="https://taxfoundation.org/data/all/federal/2025-tax-brackets/">The Tax Foundation</a>
                     </li>
-                    <li class="resourceLi custom-section">
+                    <li class="resourceLi">
                         <a href="https://www.irs.gov/">IRS Website</a>
                     </li>
                 </ul>
+            </div>
 
         </lightning-card>
     </div>    
