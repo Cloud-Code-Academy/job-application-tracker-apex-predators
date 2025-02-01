@@ -41,6 +41,11 @@ public with sharing class JoobleCalloutTest {
         }
     }
 
+    /**
+     * Test duplication preventions.  Job Applications coming in:
+     * 1. Should correctly handle creation for both new and existing Accounts
+     * 2. Should not duplicate if the same job has already pulled into the system.
+     */
     @isTest
     static void testDuplicationPrevention() {
 
@@ -83,5 +88,25 @@ public with sharing class JoobleCalloutTest {
         Assert.areEqual(1, jobAppsForExistingApp , 'Applications should not be duplicated');
     }
 
-    
+
+
+    /** 
+     * Tests that the scheduleJob method properly schedules the job 
+     */
+    @isTest
+    static void testScheduleJob(){
+
+        Test.startTest();
+        JoobleScheduler.scheduleJob();
+        JoobleScheduler.scheduleJob(); // Schedule Job twice to test the duplicate check functionality.
+        Test.stopTest();
+
+        // Verify job was scheduled
+        List<CronTrigger> jobs = [SELECT Id, CronJobDetail.Name
+            FROM CronTrigger
+            WHERE CronJobDetail.Name = 'Nightly Jooble Callout'
+        ];
+        // Assert that exactly one job is scheduled with the name "Interview Reminder Job"
+        Assert.isTrue(jobs.size() == 1, 'Scheduler should have exactly one scheduled job');
+    }
 }
