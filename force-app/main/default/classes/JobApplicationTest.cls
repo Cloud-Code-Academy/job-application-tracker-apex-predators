@@ -51,14 +51,16 @@ public with sharing class JobApplicationTest {
         appCon2.Contact__c = createdContacts[1].Id;
         List<Application_Contact__c> appConList = new List<Application_Contact__c>{appCon1, appCon2};
 
+        insert appConList;
+
+        // Find the Application Contact record to remove
+        List<Application_Contact__c> removeAppCons = [SELECT Id FROM Application_Contact__c WHERE Contact__c = :createdContacts[0].Id];
+        delete removeAppCons;
+
         // Update app 1 to add a Company and update app 2 to remove the primary contact (make null) and its first Application Contact record. 
         createdApps[0].Company_Name__c = 'Test Company';
         createdApps[1].Primary_Contact__c = null;
 
-        // Find the Application Contact record to remove
-        Application_Contact__c removeAppCon = [SELECT Id FROM Application_Contact__c WHERE Job_Application__c = :createdApps[1].Id AND Contact__c = :createdContacts[0].Id LIMIT 1];
-        delete removeAppCon;
-        
         test.startTest();
         update createdApps;
         test.stopTest();

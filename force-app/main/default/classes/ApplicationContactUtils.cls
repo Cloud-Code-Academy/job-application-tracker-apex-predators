@@ -26,7 +26,7 @@ public with sharing class ApplicationContactUtils {
         }
 
         // Get all the Application records for the App Contacts that are elligible to become Primary Contact
-        List<Job_Application__c> apps = [SELECT Id, Name FROM Job_Application__c WHERE Id IN :appIdsByContact.keySet() AND Primary_Contact__c = null];
+        List<Job_Application__c> apps = [SELECT Id, Name, Primary_Contact__c FROM Job_Application__c WHERE Id IN :appIdsByContact.keySet() AND Primary_Contact__c = null];
 
         // Prepare to update the Primary Contact field
         if (!apps.isEmpty()) {
