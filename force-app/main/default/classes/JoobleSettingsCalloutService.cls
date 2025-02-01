@@ -1,4 +1,4 @@
-public with sharing class JoobleSettingsCalloutService {
+public class JoobleSettingsCalloutService {
 
     /**
      * Invocable method that is triggered when Job Application Settings are updated within 
@@ -9,7 +9,14 @@ public with sharing class JoobleSettingsCalloutService {
      * @param settingsIds List of Job Application Setting record IDs that were updated.
      *                    This will always contain one ID because the Flow updates only one setting at a time.
      */
-    public JoobleSettingsCalloutService() {
+    @InvocableMethod(label='Trigger Jooble Callout' description='Calls Jooble API when Job Application Settings are updated')
+    public static void triggerJoobleCallout() {
 
+        // Get the search parameters from JobBoardService class
+        Map<String, String> searchParams = JobBoardService.getJobSearchParams('Jooble');
+        Integer daysBack = 14; // fetches jobs posted within this time frame
+
+        // Execute the callout
+        System.enqueueJob(new JoobleCallout(searchParams, daysBack));
     }
 }
