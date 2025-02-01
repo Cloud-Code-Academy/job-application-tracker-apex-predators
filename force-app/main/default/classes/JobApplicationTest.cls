@@ -7,7 +7,9 @@
 * - testSetPrimaryContact: Checks that if Primary_Contact__c is null and the record is updated or undeleted, if the
 *      record has any Application Contacts, use the first one to set Primary_Contact__c
 * 
-* - testCreateTasks: Checks that the proper number of tasks have been created when reord is created or updated
+* - testCreateTasksCreation: Checks that the proper number of tasks have been created when record is created
+* 
+* - testCreateTasksUpdated: Checks that the proper number of tasks have been created when record is updated
 * 
 * - testCreateAppContact: If Primary_Contact__c is changed, make sure that a related contact record is created
 *      without creating a duplicate
@@ -15,6 +17,14 @@
 */
 @isTest
 public with sharing class JobApplicationTest {
+    /*
+    * 
+    * testSetPrimaryContact creates Contacts, Job Application and Application Contact records and checks the 
+    * ApplicationContactUtils.setPrimaryContacts method.
+    * 
+    * The test method checks both that records are created and that duplicate records are not created.
+    *  
+    */
     @isTest
     public static void testSetPrimaryContact() {
         // Make 2 Contacts
@@ -77,20 +87,218 @@ public with sharing class JobApplicationTest {
 
     }
 
+    /*
+    * 
+    * testCreateTasksCreation creates Job Application records and checks that Tasks are created.
+    * 
+    * The test method checks that the correct number of Tasks are created for each Status option.
+    *  
+    */
     @isTest
-    public static void testCreateTasks() {
-        // Create 1 app with each status
-        // ensure that each app has the correct number of tasks
-        // update the status of 1 app
-        // check for the correct number of tasks
-        //could split into 2 methods, one each for create and update
+    public static void testCreateTasksCreation() {
+        // Create a list of Job Apps to create
+        List<Job_Application__c> jobApps= new List<Job_Application__c>();
+        // Create list of Statuses
+        List<String> appStatus = new List<String>{
+            'Saved',
+            'Applying',
+            'Applied',
+            'Interviewing',
+            'Negotiating',
+            'Accepted',
+            'Closed',
+            null
+        };
+        // Create 1 app with each status and 1 with no Status
+        for (Integer i = 0; i < appStatus.size(); i++) {
+            Job_Application__c app = new Job_Application__c(Status__c = appStatus[i]);
+            jobApps.add(app);
+        }
+
+        test.startTest();
+        insert jobApps;
+        test.stopTest();
+
+        // Query the created Job Apps with their Tasks
+        List<Job_Application__c> createdApps = [SELECT Id, Name, Status__c, (SELECT Id, Subject FROM Tasks) FROM Job_Application__c];
+        
+        // Ensure that each app has the correct number of tasks
+        for (Job_Application__c app : createdApps) {
+            if (app.Status__c == 'Saved') {
+                // 4 Tasks should be created when an App's Status is 'Saved'
+                Assert.areEqual(4, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Applying') {
+                // 5 Tasks should be created when an App's Status is 'Applying'
+                Assert.areEqual(5, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Applied') {
+                // 4 Tasks should be created when an App's Status is 'Applied'
+                Assert.areEqual(4, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Interviewing') {
+                // 5 Tasks should be created when an App's Status is 'Interviewing'
+                Assert.areEqual(5, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Negotiating') {
+                // 3 Tasks should be created when an App's Status is 'Negotiating'
+                Assert.areEqual(3, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Accepted') {
+                // 3 Tasks should be created when an App's Status is 'Accepted'
+                Assert.areEqual(3, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Closed') {
+                // 2 Tasks should be created when an App's Status is 'Closed'
+                Assert.areEqual(2, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else {
+                // No Tasks should be created when an App's Status is null or another value
+                Assert.areEqual(0, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+            }
+        }
     }
 
+    /*
+    * 
+    * testCreateTasksCreation creates Job Application records and checks that Tasks are created.
+    * 
+    * The test method checks that the correct number of Tasks are created for each Status option.
+    *  
+    */
+    @isTest
+    public static void testCreateTasksUpdated() {
+        // Create a list of Job Apps to create
+        List<Job_Application__c> jobApps= new List<Job_Application__c>();
+        // Create list of Statuses
+        List<String> appStatus = new List<String>{
+            'Saved',
+            'Applying',
+            'Applied',
+            'Interviewing',
+            'Negotiating',
+            'Accepted',
+            'Closed',
+            null
+        };
+        // Create 1 app with each status and 1 with no Status
+        for (Integer i = 0; i < appStatus.size(); i++) {
+            Job_Application__c app = new Job_Application__c();
+            jobApps.add(app);
+        }
+
+        insert jobApps;
+
+        // Query the created Job Apps and update Status
+        List<Job_Application__c> createdApps = [SELECT Id, Name, Status__c FROM Job_Application__c];
+
+        for (Integer i = 0; i < appStatus.size(); i++) {
+            createdApps[i].Status__c = appStatus[i];
+        }
+
+        test.startTest();
+        update createdApps;
+        test.stopTest();
+
+        // Query the created Job Apps with their Tasks
+        List<Job_Application__c> updatedApps = [SELECT Id, Name, Status__c, (SELECT Id, Subject FROM Tasks) FROM Job_Application__c];
+        
+        // Ensure that each app has the correct number of tasks
+        for (Job_Application__c app : updatedApps) {
+            if (app.Status__c == 'Saved') {
+                // 4 Tasks should be created when an App's Status is 'Saved'
+                Assert.areEqual(4, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Applying') {
+                // 5 Tasks should be created when an App's Status is 'Applying'
+                Assert.areEqual(5, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Applied') {
+                // 4 Tasks should be created when an App's Status is 'Applied'
+                Assert.areEqual(4, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Interviewing') {
+                // 5 Tasks should be created when an App's Status is 'Interviewing'
+                Assert.areEqual(5, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Negotiating') {
+                // 3 Tasks should be created when an App's Status is 'Negotiating'
+                Assert.areEqual(3, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Accepted') {
+                // 3 Tasks should be created when an App's Status is 'Accepted'
+                Assert.areEqual(3, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else if (app.Status__c == 'Closed') {
+                // 2 Tasks should be created when an App's Status is 'Closed'
+                Assert.areEqual(2, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+
+            } else {
+                // No Tasks should be created when an App's Status is null or another value
+                Assert.areEqual(0, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+            }
+        }
+    }
+
+    /*
+    * 
+    * testCreateAppContact creates Contact, Job Application and Application Contact records.
+    * 
+    * The test method checks that Application Contact records are created via automation only if the 
+    * needed junction object record does not already exist. It ensures that automation will not make 
+    * duplicate records.
+    *  
+    */
     @isTest
     public static void testCreateAppContact() {
-        // make 1 contact and 2 job apps
-        // make app contact record for contact and app 1
-        // add contact to both job apps as primary
-        // make sure that each job app has 1 app contact. That will make sure that the duplicate check is working and that app 1 does not have 2 records for contact
+        // Make a contact
+        Contact newCon = new Contact(FirstName = '1', LastName = 'McTesty');
+        
+        // Insert the Contact
+        insert newCon;
+
+        // Query the new Contact
+        Contact createdContact = [SELECT Id FROM Contact LIMIT 1];
+
+        // Make 2 Job Apps
+        Job_Application__c jobApp1 = new Job_Application__c();
+        Job_Application__c jobApp2 = new Job_Application__c();
+        List<Job_Application__c> apps = new List<Job_Application__c>{jobApp1, jobApp2};
+        
+        // Insert the Job Apps
+        insert apps;
+
+        // Query the created Applications
+        List<Job_Application__c> createdApps = [SELECT Id, Primary_Contact__c FROM Job_Application__c];
+
+        // Make App Contact record for Contact and App 1
+        Application_Contact__c appCon = new Application_Contact__c(Job_Application__c = createdApps[0].Id, Contact__c = createdContact.Id);
+
+        // Insert the Application Contact
+        insert appCon;
+
+        // Add Contact to both Apps as Primary Contact
+        for (Job_Application__c app : createdApps) {
+            app.Primary_Contact__c = createdContact.Id;
+        }
+
+        // Update the Job Apps
+        test.startTest();
+        update createdApps;
+        test.stopTest();
+
+        // Query the Job Apps again
+        List<Job_Application__c> updatedApps = [SELECT Id, Primary_Contact__c, (SELECT Id FROM Application_Contacts__r) FROM Job_Application__c];
+
+        for (Job_Application__c app : updatedApps) {
+            // Triggers if the Application Contact record is not created for App 2 via automation
+            Assert.areNotEqual(0, app.Application_Contacts__r.size(), 'Your Application Contact record has not been created.');
+            
+            // Triggers if duplicate Application Contact is created for App 1 via automation
+            Assert.areNotEqual(2, app.Application_Contacts__r.size(), 'You have created a duplicate Application Contact record.');
+            
+            // Final check for edge cases where multiple duplicates are made somehow
+            Assert.areEqual(1, app.Application_Contacts__r.size(), 'You have not created the correct number of Application Contact records.');
+        }
     }
 }

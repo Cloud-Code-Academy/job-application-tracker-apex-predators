@@ -4,14 +4,22 @@
 *      - ApplicationContactTriggerHandler.cls
 *      - ApplicationContactUtils.cls
 * 
-* - setPrimaryContacts: Upon creation or update, if the related Job Application does not have a Primary_Contact__c,
+* - testSetPrimaryContacts: Upon creation or update, if the related Job Application does not have a Primary_Contact__c,
 *      use the related Contact to set the Job App's Primary_Contact__c
 *  
 */
 @isTest
 public with sharing class ApplicationContactTest {
+    /*
+    * 
+    * testSetPrimaryContact creates Contacts, Job Application and Application Contact records and checks the 
+    * ApplicationContactUtils.setPrimaryContacts method.
+    * 
+    * The test method checks both that records are created and that duplicate records are not created.
+    *  
+    */
     @isTest
-    public static void setPrimaryContacts() {
+    public static void testSetPrimaryContacts() {
         // Create 2 Contacts: Contact 1 and Contact 2
         List<Contact> contactList = new List<Contact>();
         for (Integer i = 0; i<2; i++) {
