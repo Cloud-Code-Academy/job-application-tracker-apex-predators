@@ -17,16 +17,30 @@
 public with sharing class JobApplicationTest {
     @isTest
     public static void testSetPrimaryContact() {
+        // make 2 apps
+        // add 2 contacts
+        // set contact 1 as primary on app 1 and app 2
+        // make app contact records for contact 2 with both apps
+        // update app 1 to add a role or something
+        // update app 2 to remove the primary contact (make null). and can do something else too but not needed
+        // check that app 1 is still contact 1 and app 2 is now contact 2. Can do by making sure each contact has 1 job app or something
 
     }
 
     @isTest
     public static void testCreateTasks() {
-
+        // Create 1 app with each status
+        // ensure that each app has the correct number of tasks
+        // update the status of 1 app
+        // check for the correct number of tasks
+        //could split into 2 methods, one each for create and update
     }
 
     @isTest
     public static void testCreateAppContact() {
-
+        // make 1 contact and 2 job apps
+        // make app contact record for contact and app 1
+        // add contact to both job apps as primary
+        // make sure that each job app has 1 app contact. That will make sure that the duplicate check is working and that app 1 does not have 2 records for contact
     }
 }
