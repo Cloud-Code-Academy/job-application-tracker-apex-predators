@@ -30,6 +30,33 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
 
     /*
     * 
+    * Before Save Methods
+    * 
+    */
+
+    // Before Insert method sets the Follow-Up Date field and sets the Job App Name
+    public override void beforeInsert() {
+        for (Job_Application__c app : newList) {
+            
+            String longName = app.Company_Name__c + ' - ' + app.Position_Title__c;
+            app.Name = longName.substring(0, 150);
+        }
+        JobApplicationUtils.setFollowUpDate(newList);
+        system.debug('creation triggered');
+    }
+
+    // Before Update method sets the Follow-Up Date field for Apps with changed Status
+    public override void beforeUpdate() {
+        system.debug('update triggered');
+        List<Job_Application__c> appsWithNewStatus = JobApplicationUtils.checkStatus(newList, oldMap);
+        if (!appsWithNewStatus.isEmpty()) {
+            System.debug('found changed status');
+            JobApplicationUtils.setFollowUpDate(newList);
+        }
+    }
+
+    /*
+    * 
     * After Save Methods
     * 
     */

@@ -279,4 +279,18 @@ public with sharing class JobApplicationUtils {
             
         }
     }
+
+    /* 
+    * setFollowUpDate sets the Follow-Up Date field to 7 days from today.
+    * 
+    * @param apps: the updated Job Application records.
+    * 
+    */
+    public static void setFollowUpDate (List<Job_Application__c> apps) {
+        // For each Job Application, set the Follow-Up date to 10 days from today
+        for (Job_Application__c app : apps) {
+            app.Follow_Up_Date__c = Date.today().addDays(7);
+            system.debug('follow-up date: ' + app.Follow_Up_Date__c);
+        }
+    }
 }
