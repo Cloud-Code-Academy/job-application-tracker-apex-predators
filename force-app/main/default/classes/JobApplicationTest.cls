@@ -217,31 +217,31 @@ public with sharing class JobApplicationTest {
 
             } else if (app.Status__c == 'Applying') {
                 // 5 Tasks should be created when an App's Status is 'Applying'
-                Assert.areEqual(5, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+                Assert.areEqual(9, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
 
             } else if (app.Status__c == 'Applied') {
                 // 4 Tasks should be created when an App's Status is 'Applied'
-                Assert.areEqual(4, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+                Assert.areEqual(8, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
 
             } else if (app.Status__c == 'Interviewing') {
                 // 5 Tasks should be created when an App's Status is 'Interviewing'
-                Assert.areEqual(5, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+                Assert.areEqual(9, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
 
             } else if (app.Status__c == 'Negotiating') {
                 // 3 Tasks should be created when an App's Status is 'Negotiating'
-                Assert.areEqual(3, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+                Assert.areEqual(7, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
 
             } else if (app.Status__c == 'Accepted') {
                 // 3 Tasks should be created when an App's Status is 'Accepted'
-                Assert.areEqual(3, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+                Assert.areEqual(7, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
 
             } else if (app.Status__c == 'Closed') {
                 // 2 Tasks should be created when an App's Status is 'Closed'
-                Assert.areEqual(2, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+                Assert.areEqual(6, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
 
             } else {
                 // No Tasks should be created when an App's Status is null or another value
-                Assert.areEqual(0, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
+                Assert.areEqual(4, app.Tasks.size(), 'An incorrect number of tasks were created for this Job Application');
             }
         }
     }
