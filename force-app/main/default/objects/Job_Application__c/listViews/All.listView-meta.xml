@@ -3,6 +3,7 @@
     <fullName>All</fullName>
     <columns>NAME</columns>
     <columns>Company__c</columns>
+    <columns>Position_Title__c</columns>
     <columns>Application_Date__c</columns>
     <columns>Rating__c</columns>
     <columns>Primary_Contact__c</columns>

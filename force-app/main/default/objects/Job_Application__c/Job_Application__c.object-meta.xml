@@ -130,7 +130,7 @@
         <actionName>View</actionName>
         <comment>Action override updated by Lightning App Builder during activation.</comment>
         <content>Job_Application_Record_Page</content>
-        <formFactor>Large</formFactor>
+        <formFactor>Small</formFactor>
         <skipRecordTypeSelect>false</skipRecordTypeSelect>
         <type>Flexipage</type>
     </actionOverrides>
@@ -138,7 +138,7 @@
         <actionName>View</actionName>
         <comment>Action override updated by Lightning App Builder during activation.</comment>
         <content>Job_Application_Record_Page</content>
-        <formFactor>Small</formFactor>
+        <formFactor>Large</formFactor>
         <skipRecordTypeSelect>false</skipRecordTypeSelect>
         <type>Flexipage</type>
     </actionOverrides>
@@ -161,10 +161,9 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Job Application</label>
     <nameField>
-        <displayFormat>JA-{YYYY}-{MM}-{000}</displayFormat>
         <label>Job Application Name</label>
         <trackHistory>false</trackHistory>
-        <type>AutoNumber</type>
+        <type>Text</type>
     </nameField>
     <pluralLabel>Job Applications</pluralLabel>
     <searchLayouts></searchLayouts>
