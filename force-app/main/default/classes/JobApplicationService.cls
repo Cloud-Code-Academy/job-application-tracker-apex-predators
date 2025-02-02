@@ -107,23 +107,26 @@ public with sharing class JobApplicationService {
      * @param errorMessage Teh detailed error message to be sent
      */    
     public static void sendErrorEmail(String subject, String errorMessage){
-        // Retrieve System Admin Email Addresses
+        // Retrieve first System Admin Email (sorted alphabetically by LastName)
+        List<User> admins = [SELECT Email
+            FROM User
+            WHERE Profile.Name = 'System Administrator' AND isActive = true AND Email != null
+            ORDER BY LastName ASC
+            LIMIT 1
+        ];
+        
+        // Pull email into a List<String>
         List<String> adminEmails = new List<String>();
-        for(User user : [SELECT Email FROM User WHERE Profile.Name = 'System Administrator' AND isActive = true]){
-            if(!String.isBlank(user.Email)){
-                adminEmails.add(user.Email);
-            }
+        if (!admins.isEmpty()){
+            adminEmails.add(admins[0].Email);
+        } else {
+            return;
         }
-        // Send Email to System Admins. Output Error if unsuccessful 
-        try{
-            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            mail.setToAddresses(adminEmails);
-            mail.setSubject(subject);
-            mail.setPlainTextBody('An error occurred: \n\n' + errorMessage);
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] {mail});
-        } catch (Exception e){
-            System.debug('Error sending email: ' + e.getMessage());
-        }
+        
+        // Build EmailData object and send via EmailService
+        String body = 'An error occurred: \n\n' + errorMessage;
+        EmailData emailData = new EmailData(subject, body, adminEmails);
+        EmailService.sendEmail(new List<EmailData>{emailData});    
     }
 
     /**
