@@ -4,6 +4,8 @@ public with sharing class StaleJobCleanupTests {
     @isTest
     public static void testStaleJobCleanupWithMultipleBatches() {
 
+        // Bypass JobApplicationTriggerHandler to prevent validation during test data setup
+        TriggerHandler.bypass('JobApplicationTriggerHandler');        
         // Create stale records to test process when completing multiple batch runs
         Integer staleRecords = 200;
         List<Job_Application__c> staleApps = new List<Job_Application__c>();
@@ -63,6 +65,8 @@ public with sharing class StaleJobCleanupTests {
             Assert.areEqual('Saved', app.Status__c, 'Fresh record status should be Saved');
             Assert.isTrue(String.isBlank(app.Notes__c), 'Notes field for fresh records should remain empty');
         }
+        // **Clear the bypass after inserting test data**
+        TriggerHandler.clearBypass('EventTriggerHandler');        
     }
 
     @isTest
