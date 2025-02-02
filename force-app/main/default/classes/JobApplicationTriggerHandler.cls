@@ -40,7 +40,7 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
         JobApplicationUtils.createAppContact(newList);
     }
 
-    // After Update methods create Tasks and App Contact related records
+    // After Update methods create Tasks and App Contact related records and set Primary Contact
     public override void afterUpdate() {
         // Set Primary Contact if it is null
         JobApplicationUtils.setPrimaryContact(newList);
