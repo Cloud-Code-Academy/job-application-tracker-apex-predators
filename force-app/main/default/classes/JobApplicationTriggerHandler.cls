@@ -30,6 +30,34 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
 
     /*
     * 
+    * Before Save Methods
+    * 
+    */
+
+    // Before Insert method sets the Follow-Up Date field and sets the Job App Name
+    public override void beforeInsert() {
+        for (Job_Application__c app : newList) {
+            String fullName = app.Company_Name__c + ' - ' + app.Position_Title__c;
+            // Ensure that the name is not more than 150 characters
+            if (fullName.length() > 150) {
+                app.Name = fullName.substring(0, 150);
+            } else {
+                app.Name = fullName;
+            }
+        }
+        JobApplicationUtils.setFollowUpDate(newList);
+    }
+
+    // Before Update method sets the Follow-Up Date field for Apps with changed Status
+    public override void beforeUpdate() {
+        List<Job_Application__c> appsWithNewStatus = JobApplicationUtils.checkStatus(newList, oldMap);
+        if (!appsWithNewStatus.isEmpty()) {
+            JobApplicationUtils.setFollowUpDate(appsWithNewStatus);
+        }
+    }
+
+    /*
+    * 
     * After Save Methods
     * 
     */
@@ -40,7 +68,7 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
         JobApplicationUtils.createAppContact(newList);
     }
 
-    // After Update methods create Tasks and App Contact related records
+    // After Update methods create Tasks and App Contact related records and set Primary Contact
     public override void afterUpdate() {
         // Set Primary Contact if it is null
         JobApplicationUtils.setPrimaryContact(newList);

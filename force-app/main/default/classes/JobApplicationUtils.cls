@@ -12,7 +12,9 @@
 * - taskCreation: Create a task and populate all fields
 * 
 * - createAppContact: check for existing Application Contact records and make one for the Job App's Primary Contact if none found
-*  
+* 
+* - setFollowUpDate: Set the Follow-Up Date to 1 week from run date
+* 
 */
 public with sharing class JobApplicationUtils {
     /*
@@ -277,6 +279,20 @@ public with sharing class JobApplicationUtils {
                 system.debug('Unable to create Application Contacts for Job Application. Error: ' + e.getMessage());
             }
             
+        }
+    }
+
+    /* 
+    * setFollowUpDate sets the Follow-Up Date field to 7 days from today.
+    * 
+    * @param apps: the updated Job Application records.
+    * 
+    */
+    public static void setFollowUpDate (List<Job_Application__c> apps) {
+        // For each Job Application, set the Follow-Up date to 10 days from today
+        for (Job_Application__c app : apps) {
+            app.Follow_Up_Date__c = Date.today().addDays(7);
+            system.debug('follow-up date: ' + app.Follow_Up_Date__c);
         }
     }
 }
