@@ -13,6 +13,10 @@
 * 
 * - testCreateAppContact: If Primary_Contact__c is changed, make sure that a related contact record is created
 *      without creating a duplicate
+* 
+* - testSetFollowUpDate: Check that if the Status has changed, the Follow-Up date is a week from today
+* 
+* - testSetName: Check that the Name was set correctly
 *  
 */
 @isTest

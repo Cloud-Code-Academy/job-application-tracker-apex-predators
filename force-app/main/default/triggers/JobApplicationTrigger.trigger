@@ -8,7 +8,7 @@
 * 
 */
 
-trigger JobApplicationTrigger on Job_Application__c (after insert, after update) {
+trigger JobApplicationTrigger on Job_Application__c (before insert, before update, after insert, after update) {
     // Create an instance of the JobApplicationTriggerHandler and run it
     JobApplicationTriggerHandler jobAppTrigger = new JobApplicationTriggerHandler();
     jobAppTrigger.run();
