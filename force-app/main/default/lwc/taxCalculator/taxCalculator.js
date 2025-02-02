@@ -1,185 +1,144 @@
-import { LightningElement, wire, api } from 'lwc';  // 
+import { LightningElement, wire, api } from 'lwc';  
+import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';  
+import { RefreshEvent } from 'lightning/refresh';  
 
-import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';  // bring in the record to use in calculations
+// CONSTANTS
+const fieldsFromRecord = ['Job_Application__c.Salary__c']; // Field API name from the record
+const medicareWithholdingRate = 0.0145;
+const socialSecurityWithholdingRate = 0.062;
 
-import { RefreshEvent } from 'lightning/refresh'; 
-
-
-    // CONSTANTS BELOW
-
-    const fieldsFromRecord                  = ['Job_Application__c.Salary__c'];     // field api name that is be pulled from record
-    const medicareWithholdingRate           = 0.0145;
-    const socialSecurityWithholdingRate     = 0.062;
-
-    const federalWithholdingRate = [       
-
-        // fed rate  information found @ https://taxfoundation.org/data/all/federal/2025-tax-brackets/
-        // assuming client is Single Filer. Can add more options later if we have time.
-        
-        {minEarnings: 0,       maxEarnings: 11925,    rate: 0.10},
-        {minEarnings: 11926,   maxEarnings: 48475,    rate: 0.12},
-        {minEarnings: 48476,   maxEarnings: 103350,   rate: 0.22},
-        {minEarnings: 103351,  maxEarnings: 197300,   rate: 0.24},
-        {minEarnings: 197301,  maxEarnings: 250525,   rate: 0.32},
-        {minEarnings: 250526,  maxEarnings: 626350,   rate: 0.35},
-        {minEarnings: 626351,  maxEarnings: Infinity, rate: 0.37},
-    ];
-
-    // CONSTANTS ABOVE
-
+const federalWithholdingRate = [
+    // Federal tax brackets for 2025 (assuming Single Filer)
+    { minEarnings: 0, maxEarnings: 11925, rate: 0.10 },
+    { minEarnings: 11926, maxEarnings: 48475, rate: 0.12 },
+    { minEarnings: 48476, maxEarnings: 103350, rate: 0.22 },
+    { minEarnings: 103351, maxEarnings: 197300, rate: 0.24 },
+    { minEarnings: 197301, maxEarnings: 250525, rate: 0.32 },
+    { minEarnings: 250526, maxEarnings: 626350, rate: 0.35 },
+    { minEarnings: 626351, maxEarnings: Infinity, rate: 0.37 }
+];
 
 export default class TaxCalculator extends LightningElement {
-
-    salaryFromRecord                    = 0;
-    formattedSalaryFromRecord           = 0;
-    weeklyPay                           = 0;
-    formattedWeeklyPay                  = 0;
-    biWeeklyPay                         = 0;
-    formattedBiWeeklyPay                = 0;
-    monthlyPay                          = 0;
-    formattedMonthlyPay                 = 0;
-    sixMonthPay                         = 0;
-    formattedSixMonthPay                = 0;
-    yearlyPay                           = 0;
-    formattedYearlyPay                  = 0;
-    socialSecurityTaxOwed               = 0;
-    formattedSocialSecurityTaxOwed      = 0;
-    medicareTaxOwed                     = 0;
-    formattedMedicareTaxOwed            = 0;
-    fedTaxOwed                          = 0;
-    formattedFedTaxOwed                 = 0;
-    totalTaxes                          = 0;
-    formattedTotalTaxes                 = 0;
-
     
-
-
-
-
+    // Record and Tax-Related Properties
     @api recordId;
+    salaryFromRecord = 0;
+    totalTaxes = 0;
+    
+    // Tax Breakdown
+    fedTaxOwed = 0;
+    socialSecurityTaxOwed = 0;
+    medicareTaxOwed = 0;
 
+    // Salary Breakdown
+    yearlyPay = 0;
+    sixMonthPay = 0;
+    monthlyPay = 0;
+    biWeeklyPay = 0;
+    weeklyPay = 0;
 
+    // Formatted Display Values
+    formattedSalaryFromRecord = '0.00';
+    formattedTotalTaxes = '0.00';
+    formattedFedTaxOwed = '0.00';
+    formattedSocialSecurityTaxOwed = '0.00';
+    formattedMedicareTaxOwed = '0.00';
+    formattedYearlyPay = '0.00';
+    formattedSixMonthPay = '0.00';
+    formattedMonthlyPay = '0.00';
+    formattedBiWeeklyPay = '0.00';
+    formattedWeeklyPay = '0.00';
 
+    // Wire Service to Fetch Salary Data
     @wire(getRecord, { 
         recordId: '$recordId', 
-        fields: ['Job_Application__c.Salary__c'] 
+        fields: fieldsFromRecord 
     })
-
     wiredRecord({ error, data }) {
         if (data) {
             console.log("Record Data:", data);
-            this.salaryFromRecord = data.fields.Salary__c.value;
+            this.salaryFromRecord = data.fields.Salary__c.value || 0;
             this.handleCalculations();
         } else if (error) {
             console.error('Error retrieving record:', error);
         }
     }
 
-
-    // This is part of what makes the LWC update upon changes
+    // Notify record updates
     handleRecordUpdate() {
-
-        // Update record logic 
-
-        getRecordNotifyChange([this.recordId]); // Notify changes to the record
-
+        getRecordNotifyChange([this.recordId]);
     }
 
-
-    // This is also part of what makes the LWC update upon changes
+    // Refresh view
     refreshView() {
-
-        const refreshEvent = new RefreshEvent();
-
-        this.dispatchEvent(refreshEvent); 
-
+        this.dispatchEvent(new RefreshEvent());
     }
 
-    // Perform salary-related calculations below
-    // These calculations do NOT currently apply 'progressive tax calculations'
+    // Perform Salary and Tax Calculations
     handleCalculations() {
-        /*
-        So, if you earned an annual income of $50,000 in 2024 and your status is single, 
-        you fall into the 22% tax bracket. But, this doesn’t mean your entire income is taxed
-        at 22%. Instead, each portion of your income that falls into each bracket is taxed at
-        that rate. The first $11,600 is taxed at 10%, the amount over $11,600 and up to 
-        $47,150 is taxed at 12%, and only the income above $47,150 up to your total income 
-        of $50,000 is taxed at 22%.      
-        https://embers.banzai.org/wellness/resources/tax-brackets-and-statuses
-        */
-
         console.log("Running handleCalculations...");
         console.log(`Salary from record: ${this.salaryFromRecord}`);
 
-
         let fedTaxOwed = 0;
-        let remainingSalary = this.salaryFromRecord; // Start with full salary
-        
-    
+        let remainingSalary = this.salaryFromRecord;
 
-
+        // Calculate Federal Tax Using Brackets
         for (const bracket of federalWithholdingRate) {
             if (remainingSalary > bracket.minEarnings) {
                 let taxableAmount = Math.min(remainingSalary, bracket.maxEarnings) - bracket.minEarnings;
                 let taxForBracket = taxableAmount * bracket.rate;
-
-                fedTaxOwed += taxForBracket;  // Accumulate tax across all brackets
+                fedTaxOwed += taxForBracket;
             } else {
                 break; // Stop when salary is fully processed
             }
         }
 
+        // Assign Raw Tax Values
+        this.fedTaxOwed = fedTaxOwed;
+        this.socialSecurityTaxOwed = this.salaryFromRecord * socialSecurityWithholdingRate;
+        this.medicareTaxOwed = this.salaryFromRecord * medicareWithholdingRate;
+        this.totalTaxes = this.fedTaxOwed + this.socialSecurityTaxOwed + this.medicareTaxOwed;
 
-        // raw (tax) numbers not formatted. better for calculations
-        this.fedTaxOwed = fedTaxOwed;   
-        this.socialSecurityTaxOwed = this.salaryFromRecord * socialSecurityWithholdingRate; //calculate social security tax owed
-        this.medicareTaxOwed = this.salaryFromRecord * medicareWithholdingRate; //calculate medicare tax owed
-        this.totalTaxes = this.medicareTaxOwed + this.socialSecurityTaxOwed + this.fedTaxOwed //calculate Total Tax Owed
-
-
-        //  raw (pay) numbers not formatted. better for calculations
-    
+        // Calculate Pay Breakdown After Taxes
         this.yearlyPay = this.salaryFromRecord - this.totalTaxes;
         this.sixMonthPay = this.yearlyPay / 2;
         this.monthlyPay = this.yearlyPay / 12;
         this.biWeeklyPay = this.yearlyPay / 26;
-        this.weeklyPay = this.yearlyPay / 52; 
+        this.weeklyPay = this.yearlyPay / 52;
 
-        // formatted (tax) numbers for super duper pretty LWC
-
-        this.formattedSocialSecurityTaxOwed = this.socialSecurityTaxOwed.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedMedicareTaxOwed = this.medicareTaxOwed.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedFedTaxOwed = this.fedTaxOwed.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedYearlyPay = this.yearlyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedTotalTaxes = this.totalTaxes.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-
-        // formatted (pay) numbers for super duper pretty LWC
-        this.formattedYearlyPay = this.yearlyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedSixMonthPay = this.sixMonthPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedMonthlyPay = this.monthlyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedBiWeeklyPay = this.biWeeklyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedWeeklyPay = this.weeklyPay.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-        this.formattedSalaryFromRecord = this.salaryFromRecord.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-
+        // Calls formatValues method to format the values for display as lightning-input 
+        this.formatValues();
 
         console.log(`Fed Tax Owed: ${this.fedTaxOwed}, Social Security: ${this.socialSecurityTaxOwed}, Medicare: ${this.medicareTaxOwed}`);
-
-
-
-        
-        
-
-
     }
 
+    // Format Numeric Values for Display
+    formatValues() {
+        this.formattedSalaryFromRecord = this.formatNumber(this.salaryFromRecord);
+        this.formattedTotalTaxes = this.formatNumber(this.totalTaxes);
+        this.formattedFedTaxOwed = this.formatNumber(this.fedTaxOwed);
+        this.formattedSocialSecurityTaxOwed = this.formatNumber(this.socialSecurityTaxOwed);
+        this.formattedMedicareTaxOwed = this.formatNumber(this.medicareTaxOwed);
+        this.formattedYearlyPay = this.formatNumber(this.yearlyPay);
+        this.formattedSixMonthPay = this.formatNumber(this.sixMonthPay);
+        this.formattedMonthlyPay = this.formatNumber(this.monthlyPay);
+        this.formattedBiWeeklyPay = this.formatNumber(this.biWeeklyPay);
+        this.formattedWeeklyPay = this.formatNumber(this.weeklyPay);
+    }
 
+    // Helper Method to Format Numbers
+    formatNumber(value) {
+        return value.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    }
+
+    // Handle Salary Input Change
     updateSalary(event) {
-        this.salaryFromRecord = event.target.value;
-        this.handleCalculations();  // Recalculate everything when salary changes
+        console.log(`Raw input value: ${event.target.value}`);
+        
+        this.salaryFromRecord = event.target.value ? Number(event.target.value) : 0;
+    
+        console.log(`Converted salary: ${this.salaryFromRecord}`);
+        
+        this.handleCalculations();
     }
-
 }
-
-
-
-
