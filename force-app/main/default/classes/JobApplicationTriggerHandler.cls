@@ -52,7 +52,7 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
     public override void beforeUpdate() {
         List<Job_Application__c> appsWithNewStatus = JobApplicationUtils.checkStatus(newList, oldMap);
         if (!appsWithNewStatus.isEmpty()) {
-            JobApplicationUtils.setFollowUpDate(newList);
+            JobApplicationUtils.setFollowUpDate(appsWithNewStatus);
         }
     }
 

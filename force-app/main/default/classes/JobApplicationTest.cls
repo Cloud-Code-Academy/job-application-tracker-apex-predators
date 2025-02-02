@@ -14,7 +14,9 @@
 * - testCreateAppContact: If Primary_Contact__c is changed, make sure that a related contact record is created
 *      without creating a duplicate
 * 
-* - testSetFollowUpDate: Check that if the Status has changed, the Follow-Up date is a week from today
+* - testSetFollowUpDateCreation: Check when the App is created, the Follow-Up date is a week from today
+*
+* - testSetFollowUpDateUpdated: Check that if the Status has changed, the Follow-Up date is a week from today
 * 
 * - testSetName: Check that the Name was set correctly
 *  
@@ -303,6 +305,148 @@ public with sharing class JobApplicationTest {
             
             // Final check for edge cases where multiple duplicates are made somehow
             Assert.areEqual(1, app.Application_Contacts__r.size(), 'You have not created the correct number of Application Contact records.');
+        }
+    }
+
+    /*
+    * 
+    * testFollowUpDateCreation checks that Apps are created with a Follow-Up Date a week from today.
+    *  
+    */
+    @isTest
+    public static void testFollowUpDateCreation() {
+        // Identify the correct date for the Follow-Up date field
+        Date correctDate = Date.today().addDays(7);
+
+        // Create test data
+        List<Job_Application__c> apps = new List<Job_Application__c>();
+        for (Integer i=0; i < 10; i++) {
+            Job_Application__c newApp = new Job_Application__c();
+            apps.add(newApp);
+        }
+
+        // Insert the records
+        test.startTest();
+        insert apps;
+        test.stopTest();
+
+        // Query the created Applications
+        List<Job_Application__c> createdApps = [SELECT Id, Status__c, Follow_Up_Date__c FROM Job_Application__c];
+
+        // Check that the automation worked correctly
+        for (Job_Application__c app : createdApps) {
+            Assert.areEqual(correctDate, app.Follow_Up_Date__c, 'The Follow-Up Date is incorrect.');
+        }
+    }
+
+    /*
+    * 
+    * testFollowUpDateUpdated checks that the Follow-Up Date for Apps with updated Status is a week from today.
+    * 
+    * The method ensures that the date is only updated if the Status is changed.
+    *  
+    */
+    @isTest
+    public static void testFollowUpDateUpdated() {
+        // Identify the correct date for the Follow-Up date field
+        Date correctDate = Date.today().addDays(7);
+
+        // Create test data
+        List<Job_Application__c> apps = new List<Job_Application__c>();
+        for (Integer i=0; i < 10; i++) {
+            Job_Application__c newApp = new Job_Application__c();
+            apps.add(newApp);
+        }
+
+        // Insert the records
+        insert apps;
+
+        // Query the created Applications
+        List<Job_Application__c> createdApps = [SELECT Id, Status__c, Follow_Up_Date__c, Position_Title__c FROM Job_Application__c];
+
+        // Remove the Follow-Up Date from all the apps
+        for (Job_Application__c app : createdApps) {
+            app.Follow_Up_Date__c = null;
+        }
+
+        // Update the Apps
+        update createdApps;
+
+        // Update the Status of half the records and the Position/Title of the other half
+        for (Integer i = 0; i < createdApps.size(); i++) {
+            if (Math.mod(i, 2) == 0) {
+                createdApps[i].Status__c = 'Applied';
+            } else {
+                createdApps[i].Position_Title__c = 'Official Tester';
+            }
+        }
+
+        // Update the Apps
+        update createdApps;
+
+        // Query the updated Apps
+        List<Job_Application__c> updatedApps = [SELECT Id, Status__c, Follow_Up_Date__c, Position_Title__c FROM Job_Application__c];
+        // Create counters for Asserts
+        Integer statusCounter = 0;
+        Integer positionCounter = 0;
+
+        // Check that the automation worked correctly
+        for (Integer i = 0; i < updatedApps.size(); i++) {
+            if (Math.mod(i,2) == 0) {
+                // Even records should have a correct Follow-Up Date
+                Assert.areEqual(correctDate, updatedApps[i].Follow_Up_Date__c, 'The Follow-Up Date is incorrect.');
+                // Increment the counter
+                statusCounter++;
+            } else {
+                // Odd records should not have a Follow-Up Date as the Status was not updated
+                Assert.areEqual(null, updatedApps[i].Follow_Up_Date__c, 'This record should not have a Follow-Up Date.');
+                // Increment the counter
+                positionCounter++;
+            }
+        }
+
+        // Check that 5 of each record were processed
+        Assert.areEqual(5, statusCounter, 'The Follow-Up date is not populated on the correct number of records.');
+        Assert.areEqual(5, positionCounter, 'The Follow-Up date is not null on the correct number of records.');
+    }
+
+    /*
+    * 
+    * testSetName checks that the name was set correctly upon record creation.
+    * 
+    * Format: [Company Name] - [Role]
+    *  
+    */
+    @isTest
+    public static void testSetName() {
+        // Create the test Job Applications
+        List<Job_Application__c> appList = new List<Job_Application__c>();
+
+        for (Integer i = 0; i < 10; i++) {
+            Job_Application__c newApp = new Job_Application__c();
+            newApp.Company_Name__c = 'Company #' + i;
+            newApp.Position_Title__c = 'Official Tester #' + i;
+            appList.add(newApp);
+        }
+
+        // Generate the list of desired App names
+        List<String> appNames = new List<String>();
+
+        for (Integer i = 0; i < 10; i++) {
+            appNames.add('Company #' + i + ' - Official Tester #' + i);
+        }
+
+        // Insert the Apps
+        test.startTest();
+        insert appList;
+        test.stopTest();
+
+        // Query the created Apps
+        List<Job_Application__c> createdApps = [SELECT Id, Name FROM Job_Application__c];
+
+        // Check that the values of the App's names match those in the generated list of names
+        for (Integer i = 0; i< 10; i++) {
+            Assert.areEqual(appNames[i], createdApps[i].Name, 'The Name of this Job Application is incorrect.');
         }
     }
 }
