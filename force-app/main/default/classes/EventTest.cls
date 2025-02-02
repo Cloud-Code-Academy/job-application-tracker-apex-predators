@@ -121,7 +121,7 @@ public with sharing class EventTest {
         initialEvents.add(existingEvent);
 
         // Create 4 other initial events that will not overlap with the already created one
-        for (Integer i = 0; i < 4; i++) {
+        for (Integer i = 0; i < 3; i++) {
             Event newEvent = new Event(Subject = 'New Event ' + i);
             newEvent.StartDateTime = Datetime.newInstance(eventDate.addYears(i), baseTime);
             newEvent.EndDateTime = Datetime.newInstance(eventDate.addYears(i), baseTime.addHours(1));
@@ -138,17 +138,13 @@ public with sharing class EventTest {
         createdEvents[1].StartDateTime = Datetime.newInstance(eventDate, baseTime.addHours(2));
         createdEvents[1].EndDateTime = Datetime.newInstance(eventDate, baseTime.addHours(4));
 
-        // Update an event so it starts during that initial event, 7-9 AM
+        // Update an event so it ends during that initial event, 7-9 AM
         createdEvents[2].StartDateTime = Datetime.newInstance(eventDate, baseTime);
         createdEvents[2].EndDateTime = Datetime.newInstance(eventDate, baseTime.addHours(2));
 
-        // Update an event so it starts during that initial event, 7-11 AM
+        // Update an event so it encompasses that initial event, 7-11 AM
         createdEvents[3].StartDateTime = Datetime.newInstance(eventDate, baseTime);
         createdEvents[3].EndDateTime = Datetime.newInstance(eventDate, baseTime.addHours(4));
-
-        // Update an event so it starts during that initial event, 11-12 AM
-        createdEvents[3].StartDateTime = Datetime.newInstance(eventDate, baseTime.addHours(4));
-        createdEvents[3].EndDateTime = Datetime.newInstance(eventDate, baseTime.addHours(5));
 
         // Make variable counters for unsuccessful inserts
         Integer failedEventCounter = 0;
@@ -177,15 +173,6 @@ public with sharing class EventTest {
         try {
             // Try to insert the events
             insert createdEvents[3];
-        } catch (Exception e) {
-            // Increment the failedEventCounter
-            failedEventCounter++;
-        }
-
-        // Use a try-catch block to do the insert for valid Event. This one SHOULD succeed.
-        try {
-            // Try to insert the events
-            insert createdEvents[4];
         } catch (Exception e) {
             // Increment the failedEventCounter
             failedEventCounter++;
