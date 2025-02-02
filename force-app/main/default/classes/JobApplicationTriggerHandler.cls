@@ -39,8 +39,8 @@ public with sharing class JobApplicationTriggerHandler extends TriggerHandler{
         for (Job_Application__c app : newList) {
             String fullName = app.Company_Name__c + ' - ' + app.Position_Title__c;
             // Ensure that the name is not more than 150 characters
-            if (fullName.length() > 150) {
-                app.Name = fullName.substring(0, 150);
+            if (fullName.length() > 80) {
+                app.Name = fullName.substring(0, 80);
             } else {
                 app.Name = fullName;
             }
