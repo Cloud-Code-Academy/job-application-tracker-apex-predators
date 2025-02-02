@@ -1,6 +1,9 @@
 /*
 * 
 * JobApplicationTrigger will fire in the following circumstances:
+* 
+* - before insert
+* - before update
 * - after insert
 * - after update
 * 

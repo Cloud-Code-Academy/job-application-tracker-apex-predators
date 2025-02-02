@@ -12,7 +12,9 @@
 * - taskCreation: Create a task and populate all fields
 * 
 * - createAppContact: check for existing Application Contact records and make one for the Job App's Primary Contact if none found
-*  
+* 
+* - setFollowUpDate: Set the Follow-Up Date to 1 week from run date
+* 
 */
 public with sharing class JobApplicationUtils {
     /*
